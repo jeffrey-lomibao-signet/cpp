@@ -10,11 +10,11 @@
 
 using namespace std;
 
-template <typename summable>
-summable sum(vector<summable> d)
+template <class summable>
+summable sum(const vector<summable>& d)
 {
     summable sum{0};
-    for (int i{0}; i < d.size(); ++i)
+    for (auto i: d)
         sum += i;
     return sum;
 }
