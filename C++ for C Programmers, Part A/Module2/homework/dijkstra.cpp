@@ -15,6 +15,11 @@ public:
   void setEdge(int n, int d) { setNode(n); setDistance(d); }
   Edge getEdge() { return Edge(node, distance); }
 
+  friend ostream& operator<<(ostream& out, const Edge& e) {
+    out << "(" << e.node << "," << e.distance << ")";
+    return out;
+  }
+
 private:
   int node;
   int distance; 
@@ -26,7 +31,7 @@ public:
   void add(Edge e) { v.push_back(e); }
   int getNumEdges() { return v.size(); }
 
-private:
+// private:
   vector<Edge> v;
 };
 
@@ -44,7 +49,7 @@ public:
 // set_edge_value (G, x, y, v): sets the value associated to the edge (x,y) to v.
 // One important consideration for the Graph class is how to represent the graph as a member ADT. Two basic implementations are generally considered: adjacency list and adjacency matrix depending on the relative edge density. For sparse graphs, the list approach is typically more efficient, but for dense graphs, the matrix approach can be more efficient (reference an Algorithm’s source for space and time analysis). Note in some cases such as add(G, x, y) you may also want to have the edge carry along its cost. Another approach could be to use (x, y) to index a cost stored in an associated array or map.
 
-private:
+// private:
   vector<Vertex> g;
 };
 
@@ -106,5 +111,12 @@ int main() {
   g.add(Nodes::T, Nodes::F, 5);
   cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
 
+  int node{0};
+  for (auto v: g.g) {
+    for (auto e: v.v) {
+      cout << node << ": " << e << endl;
+    }
+    ++node;
+  }
   return 0;
 }
