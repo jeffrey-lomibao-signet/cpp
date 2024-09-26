@@ -57,7 +57,8 @@ public:
 class Vertex {
 public:
   Vertex() {};
-  void add(Edge e) { v.push_back(e); }
+  void addEdge(Edge e) { v.push_back(e); }
+  void deleteEdge(Node node);
   int getNumEdges() { return v.size(); }
   bool isNodePresent(const Node n);
   friend ostream& operator<<(ostream& out, const Vertex& v);
@@ -77,6 +78,15 @@ bool Vertex::isNodePresent(Node node) {
   return edgeFound;
 }
 
+void Vertex::deleteEdge(Node node) {
+  for (auto e = v.begin(); e != v.end(); ++e) {
+    if (e->getNode() == node) {
+      v.erase(e);
+      break;
+    }
+  }
+}
+
 ostream& operator<<(ostream& out, const Vertex& v) {
   for (auto e: v.v) {
     cout << " " << e; 
@@ -92,9 +102,9 @@ public:
   bool isNodePresent(Node node); //tests whether a node is present in the graph
   bool isEdgePresent(Node nodeX, Node nodeY);// adjacent (G, x, y): tests whether there is an edge from node x to node y.
   const Vertex& getNeighborsList(Node nodeX); // neighbors (G, x): lists all nodes y such that there is an edge from x to y.
-  void addEdge(Node nodeX, Node nodeY, int distance); // (G, x, y): adds to G the edge from x to y, if it is not there.
   void addNode(Node node);
-// delete (G, x, y): removes the edge from x to y, if it is there.
+  void addEdge(Node nodeX, Node nodeY, int distance); // (G, x, y): adds to G the edge from x to y, if it is not there.
+  void deleteEdge(Node nodeX, Node nodeY); // delete (G, x, y): removes the edge from x to y, if it is there.
 // get_node_value (G, x): returns the value associated with the node x.
 // set_node_value( G, x, a): sets the value associated with the node x to a.
 // get_edge_value( G, x, y): returns the value associated to the edge (x,y).
@@ -137,22 +147,28 @@ const Vertex& Graph::getNeighborsList(Node nodeX) {
   return g.at(size_t(nodeX));
 }
 
+void Graph::addNode(Node node) {
+  if(!isNodePresent(node)) {
+    Vertex v;
+    g.push_back(v);
+  }
+}
+
 void Graph::addEdge(Node nodeX, Node nodeY, int distance) {
   Edge e{nodeY, distance};
   if (!isNodePresent(nodeX)) {
     Vertex v;
-    v.add(e);
+    v.addEdge(e);
     g.push_back(v);
   }
   else if (!isEdgePresent(nodeX, nodeY)) {
-    g.at(size_t(nodeX)).add(e);
+    g.at(size_t(nodeX)).addEdge(e);
   }
 }
 
-void Graph::addNode(Node node) {
-  if(int(node) >= getNumVertices()) {
-    Vertex v;
-    g.push_back(v);
+void Graph::deleteEdge(Node nodeX, Node nodeY) {
+  if (isEdgePresent(nodeX, nodeY)) {
+    g.at(size_t(nodeX)).deleteEdge(nodeY);
   }
 }
 
@@ -202,13 +218,18 @@ void addExampleGraph(Graph& g) {
   cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
 
   g.addEdge(Node::T, Node::F, 5);
+  g.addEdge(Node::S, Node::T, 20);
   cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
+  cout << "Graph:" << endl << g;
+
+  g.deleteEdge(Node::S, Node::T);
+  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
+  cout << "Graph:" << endl << g;
 }
 
 //=============================================================================
 int main() {
   Graph g;
   addExampleGraph(g);
-  cout << "Graph:" << endl << g;
   return 0;
 }
