@@ -59,21 +59,21 @@ public:
 class Vertex {
 public:
   Vertex() {};
-  void addEdge(Edge e) { v.push_back(e); }
+  void addEdge(Edge e) { edges.push_back(e); }
   void deleteEdge(Node node);
-  int getNumEdges() { return v.size(); }
+  int getNumEdges() { return edges.size(); }
   bool isNodePresent(const Node node);
   int getEdgeValue(const Node node);
   void setEdgeValue(const Node node, int distance);
   friend ostream& operator<<(ostream& out, const Vertex& v);
 
 private:
-  vector<Edge> v;
+  vector<Edge> edges;
 };
 
 bool Vertex::isNodePresent(Node node) {
   bool edgeFound{false};
-  for (auto e: v) {
+  for (auto e: edges) {
     if (e.getNode() == node) {
       edgeFound = true;
       break;
@@ -83,16 +83,16 @@ bool Vertex::isNodePresent(Node node) {
 }
 
 void Vertex::deleteEdge(Node node) {
-  for (auto e = v.begin(); e != v.end(); ++e) {
+  for (auto e = edges.begin(); e != edges.end(); ++e) {
     if (e->getNode() == node) {
-      v.erase(e);
+      edges.erase(e);
       break;
     }
   }
 }
 
 int Vertex::getEdgeValue(const Node node) {
-  for (auto e = v.begin(); e != v.end(); ++e) {
+  for (auto e = edges.begin(); e != edges.end(); ++e) {
     if (e->getNode() == node) {
       return e->getDistance();
     }
@@ -101,7 +101,7 @@ int Vertex::getEdgeValue(const Node node) {
 }
 
 void Vertex::setEdgeValue(const Node node, int distance) {
-  for (auto e = v.begin(); e != v.end(); ++e) {
+  for (auto e = edges.begin(); e != edges.end(); ++e) {
     if (e->getNode() == node) {
       return e->setDistance(distance);
     }
@@ -109,7 +109,7 @@ void Vertex::setEdgeValue(const Node node, int distance) {
 }
 
 ostream& operator<<(ostream& out, const Vertex& v) {
-  for (auto e: v.v) {
+  for (auto e: v.edges) {
     cout << " " << e; 
   }
   return out;
@@ -118,7 +118,7 @@ ostream& operator<<(ostream& out, const Vertex& v) {
 //=============================================================================
 class Graph {
 public:
-  int getNumVertices() { return g.size(); } // V() returns the number of vertices in the graph
+  int getNumVertices() { return vertices.size(); } // V() returns the number of vertices in the graph
   int getNumEdges(); // E() returns the number of edges in the graph
   bool isNodePresent(Node node); //tests whether a node is present in the graph
   bool isEdgePresent(Node nodeX, Node nodeY);// adjacent (G, x, y): tests whether there is an edge from node x to node y.
@@ -141,12 +141,12 @@ private:
   // (reference an Algorithm’s source for space and time analysis). 
   // Note in some cases such as add(G, x, y) you may also want to have the edge carry along its cost. 
   // Another approach could be to use (x, y) to index a cost stored in an associated array or map.
-  vector<Vertex> g; // use adjacency list to represent the graph
+  vector<Vertex> vertices; // use adjacency list to represent the graph
 };
 
 int Graph::getNumEdges() {
   int numEdges{0};
-  for(Vertex v: g) {
+  for(Vertex v: vertices) {
     numEdges += v.getNumEdges();
   }
   return numEdges;
@@ -159,20 +159,20 @@ bool Graph::isNodePresent(Node node) {
 bool Graph::isEdgePresent(Node nodeX, Node nodeY) {
   bool edgeFound{false};
   if(isNodePresent(nodeX)) {
-    edgeFound = g.at(size_t(nodeX)).isNodePresent(nodeY);
+    edgeFound = vertices.at(size_t(nodeX)).isNodePresent(nodeY);
   }
   return edgeFound;
 }
 
 const Vertex& Graph::getNeighborsList(Node nodeX) {
   assert(isNodePresent(nodeX));
-  return g.at(size_t(nodeX));
+  return vertices.at(size_t(nodeX));
 }
 
 void Graph::addNode(Node node) {
   if(!isNodePresent(node)) {
     Vertex v;
-    g.push_back(v);
+    vertices.push_back(v);
   }
 }
 
@@ -181,16 +181,16 @@ void Graph::addEdge(Node nodeX, Node nodeY, int distance) {
   if (!isNodePresent(nodeX)) {
     Vertex v;
     v.addEdge(e);
-    g.push_back(v);
+    vertices.push_back(v);
   }
   else if (!isEdgePresent(nodeX, nodeY)) {
-    g.at(size_t(nodeX)).addEdge(e);
+    vertices.at(size_t(nodeX)).addEdge(e);
   }
 }
 
 void Graph::deleteEdge(Node nodeX, Node nodeY) {
   if (isEdgePresent(nodeX, nodeY)) {
-    g.at(size_t(nodeX)).deleteEdge(nodeY);
+    vertices.at(size_t(nodeX)).deleteEdge(nodeY);
   }
 }
 
@@ -202,20 +202,20 @@ int Graph::getNodeValue(Node node) {
 
 int Graph::getEdgeValue(Node nodeX, Node nodeY) {
   if (isEdgePresent(nodeX, nodeY)) {
-    return g.at(size_t(nodeX)).getEdgeValue(nodeY);
+    return vertices.at(size_t(nodeX)).getEdgeValue(nodeY);
   }
   return INVALID_NODE;
 }
 
 void Graph::setEdgeValue(Node nodeX, Node nodeY, int distance) {
   if (isEdgePresent(nodeX, nodeY)) {
-    return g.at(size_t(nodeX)).setEdgeValue(nodeY, distance);
+    return vertices.at(size_t(nodeX)).setEdgeValue(nodeY, distance);
   }
 }
 
 ostream& operator<<(ostream& out, const Graph& g) {
   Node node{Node(0)};
-  for (auto v: g.g) {
+  for (auto v: g.vertices) {
     cout << node << ":";
     cout << v;
     cout << endl;
