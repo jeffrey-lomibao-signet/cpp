@@ -62,8 +62,9 @@ public:
   void addEdge(Edge e) { v.push_back(e); }
   void deleteEdge(Node node);
   int getNumEdges() { return v.size(); }
-  bool isNodePresent(const Node n);
-  int getEdgeValue(const Node n);
+  bool isNodePresent(const Node node);
+  int getEdgeValue(const Node node);
+  void setEdgeValue(const Node node, int distance);
   friend ostream& operator<<(ostream& out, const Vertex& v);
 
 private:
@@ -99,6 +100,14 @@ int Vertex::getEdgeValue(const Node node) {
   return INVALID_NODE;
 }
 
+void Vertex::setEdgeValue(const Node node, int distance) {
+  for (auto e = v.begin(); e != v.end(); ++e) {
+    if (e->getNode() == node) {
+      return e->setDistance(distance);
+    }
+  }
+}
+
 ostream& operator<<(ostream& out, const Vertex& v) {
   for (auto e: v.v) {
     cout << " " << e; 
@@ -118,20 +127,21 @@ public:
   void addEdge(Node nodeX, Node nodeY, int distance); // (G, x, y): adds to G the edge from x to y, if it is not there.
   void deleteEdge(Node nodeX, Node nodeY); // delete (G, x, y): removes the edge from x to y, if it is there.
   int getNodeValue(Node node); // get_node_value (G, x): returns the value associated with the node x.
-// set_node_value( G, x, a): sets the value associated with the node x to a.
+  // setNodeValue is not needed since we are using the vertex index as the node value
+  // set_node_value( G, x, a): sets the value associated with the node x to a.
   int getEdgeValue(Node nodeX, Node nodeY); // get_edge_value( G, x, y): returns the value associated to the edge (x,y).
-// set_edge_value (G, x, y, v): sets the value associated to the edge (x,y) to v.
+  void setEdgeValue(Node nodeX, Node nodeY, int distance);// set_edge_value (G, x, y, v): sets the value associated to the edge (x,y) to v.
 
-// One important consideration for the Graph class is how to represent the graph as a member ADT. 
-// Two basic implementations are generally considered: adjacency list and adjacency matrix depending on the relative edge density. 
-// For sparse graphs, the list approach is typically more efficient, but for dense graphs, the matrix approach can be more efficient 
-// (reference an Algorithm’s source for space and time analysis). 
-// Note in some cases such as add(G, x, y) you may also want to have the edge carry along its cost. 
-// Another approach could be to use (x, y) to index a cost stored in an associated array or map.
   friend ostream& operator<<(ostream& out, const Graph& g);
 
 private:
-  vector<Vertex> g;
+  // One important consideration for the Graph class is how to represent the graph as a member ADT. 
+  // Two basic implementations are generally considered: adjacency list and adjacency matrix depending on the relative edge density. 
+  // For sparse graphs, the list approach is typically more efficient, but for dense graphs, the matrix approach can be more efficient 
+  // (reference an Algorithm’s source for space and time analysis). 
+  // Note in some cases such as add(G, x, y) you may also want to have the edge carry along its cost. 
+  // Another approach could be to use (x, y) to index a cost stored in an associated array or map.
+  vector<Vertex> g; // use adjacency list to represent the graph
 };
 
 int Graph::getNumEdges() {
@@ -197,6 +207,12 @@ int Graph::getEdgeValue(Node nodeX, Node nodeY) {
   return INVALID_NODE;
 }
 
+void Graph::setEdgeValue(Node nodeX, Node nodeY, int distance) {
+  if (isEdgePresent(nodeX, nodeY)) {
+    return g.at(size_t(nodeX)).setEdgeValue(nodeY, distance);
+  }
+}
+
 ostream& operator<<(ostream& out, const Graph& g) {
   Node node{Node(0)};
   for (auto v: g.g) {
@@ -252,6 +268,8 @@ void addExampleGraph(Graph& g) {
   cout << "Graph:" << endl << g;
 
   cout << "S->A = " << g.getEdgeValue(Node::S, Node::A) << endl;
+  cout << "G->T = " << g.getEdgeValue(Node::G, Node::T) << endl;
+  g.setEdgeValue(Node::G, Node::T, 5);
   cout << "G->T = " << g.getEdgeValue(Node::G, Node::T) << endl;
 }
 
