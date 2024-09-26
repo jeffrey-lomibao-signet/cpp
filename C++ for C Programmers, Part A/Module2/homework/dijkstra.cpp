@@ -7,6 +7,8 @@ using namespace std;
 //=============================================================================
 enum class Node { S, A, B, C, D, E, F, G, T };
 constexpr int NUM_NODES = int(Node::T) + 1; 
+constexpr int INVALID_NODE = -1;
+
 ostream& operator<<(ostream& out, const Node& n) {
   switch(n) {
   case Node::S: out << "S"; break;
@@ -61,6 +63,7 @@ public:
   void deleteEdge(Node node);
   int getNumEdges() { return v.size(); }
   bool isNodePresent(const Node n);
+  int getEdgeValue(const Node n);
   friend ostream& operator<<(ostream& out, const Vertex& v);
 
 private:
@@ -87,6 +90,15 @@ void Vertex::deleteEdge(Node node) {
   }
 }
 
+int Vertex::getEdgeValue(const Node node) {
+  for (auto e = v.begin(); e != v.end(); ++e) {
+    if (e->getNode() == node) {
+      return e->getDistance();
+    }
+  }
+  return INVALID_NODE;
+}
+
 ostream& operator<<(ostream& out, const Vertex& v) {
   for (auto e: v.v) {
     cout << " " << e; 
@@ -97,7 +109,7 @@ ostream& operator<<(ostream& out, const Vertex& v) {
 //=============================================================================
 class Graph {
 public:
-  int getNumVertices() { return g.size(); }; // V() returns the number of vertices in the graph
+  int getNumVertices() { return g.size(); } // V() returns the number of vertices in the graph
   int getNumEdges(); // E() returns the number of edges in the graph
   bool isNodePresent(Node node); //tests whether a node is present in the graph
   bool isEdgePresent(Node nodeX, Node nodeY);// adjacent (G, x, y): tests whether there is an edge from node x to node y.
@@ -105,9 +117,9 @@ public:
   void addNode(Node node);
   void addEdge(Node nodeX, Node nodeY, int distance); // (G, x, y): adds to G the edge from x to y, if it is not there.
   void deleteEdge(Node nodeX, Node nodeY); // delete (G, x, y): removes the edge from x to y, if it is there.
-// get_node_value (G, x): returns the value associated with the node x.
+  int getNodeValue(Node node); // get_node_value (G, x): returns the value associated with the node x.
 // set_node_value( G, x, a): sets the value associated with the node x to a.
-// get_edge_value( G, x, y): returns the value associated to the edge (x,y).
+  int getEdgeValue(Node nodeX, Node nodeY); // get_edge_value( G, x, y): returns the value associated to the edge (x,y).
 // set_edge_value (G, x, y, v): sets the value associated to the edge (x,y) to v.
 
 // One important consideration for the Graph class is how to represent the graph as a member ADT. 
@@ -172,6 +184,19 @@ void Graph::deleteEdge(Node nodeX, Node nodeY) {
   }
 }
 
+int Graph::getNodeValue(Node node) {
+  if (isNodePresent(node))
+    return int(node); 
+  return INVALID_NODE;
+}
+
+int Graph::getEdgeValue(Node nodeX, Node nodeY) {
+  if (isEdgePresent(nodeX, nodeY)) {
+    return g.at(size_t(nodeX)).getEdgeValue(nodeY);
+  }
+  return INVALID_NODE;
+}
+
 ostream& operator<<(ostream& out, const Graph& g) {
   Node node{Node(0)};
   for (auto v: g.g) {
@@ -225,6 +250,9 @@ void addExampleGraph(Graph& g) {
   g.deleteEdge(Node::S, Node::T);
   cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
   cout << "Graph:" << endl << g;
+
+  cout << "S->A = " << g.getEdgeValue(Node::S, Node::A) << endl;
+  cout << "G->T = " << g.getEdgeValue(Node::G, Node::T) << endl;
 }
 
 //=============================================================================
