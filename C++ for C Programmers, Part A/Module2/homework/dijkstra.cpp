@@ -59,12 +59,23 @@ public:
   Vertex() {};
   void add(Edge e) { v.push_back(e); }
   int getNumEdges() { return v.size(); }
-  const vector<Edge>& getList() const { return v; }
+  bool isNodePresent(const Node n);
   friend ostream& operator<<(ostream& out, const Vertex& v);
 
 private:
   vector<Edge> v;
 };
+
+bool Vertex::isNodePresent(Node node) {
+  bool edgeFound{false};
+  for (auto e: v) {
+    if (e.getNode() == node) {
+      edgeFound = true;
+      break;
+    }
+  }
+  return edgeFound;
+}
 
 ostream& operator<<(ostream& out, const Vertex& v) {
   for (auto e: v.v) {
@@ -110,12 +121,7 @@ bool Graph::isNodePresent(Node node) {
 bool Graph::isEdgePresent(Node nodeX, Node nodeY) {
   bool edgeFound{false};
   if(isNodePresent(nodeX)) {
-    for (auto e: g.at(size_t(nodeX)).getList()) {
-      if (e.getNode() == nodeY) {
-        edgeFound = true;
-        break;
-      }
-    }
+    edgeFound = g.at(size_t(nodeX)).isNodePresent(nodeY);
   }
   return edgeFound;
 }
