@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <cassert>
 
 using namespace std;
 
@@ -59,10 +60,18 @@ public:
   void add(Edge e) { v.push_back(e); }
   int getNumEdges() { return v.size(); }
   const vector<Edge>& getList() const { return v; }
+  friend ostream& operator<<(ostream& out, const Vertex& v);
 
 private:
   vector<Edge> v;
 };
+
+ostream& operator<<(ostream& out, const Vertex& v) {
+  for (auto e: v.v) {
+    cout << " " << e; 
+  }
+  return out;
+}
 
 //=============================================================================
 class Graph {
@@ -71,7 +80,7 @@ public:
   int getNumEdges(); // E() returns the number of edges in the graph
   bool isNodePresent(Node node); //tests whether a node is present in the graph
   bool isEdgePresent(Node nodeX, Node nodeY);// adjacent (G, x, y): tests whether there is an edge from node x to node y.
-// neighbors (G, x): lists all nodes y such that there is an edge from x to y.
+  const Vertex& getNeighborsList(Node nodeX); // neighbors (G, x): lists all nodes y such that there is an edge from x to y.
   void add(Node nodeX, Node nodeY, int distance); // (G, x, y): adds to G the edge from x to y, if it is not there.
   void add(Node node);
 // delete (G, x, y): removes the edge from x to y, if it is there.
@@ -130,13 +139,16 @@ void Graph::add(Node node) {
   }
 }
 
+const Vertex& Graph::getNeighborsList(Node nodeX) {
+  assert(isNodePresent(nodeX));
+  return g.at(size_t(nodeX));
+}
+
 ostream& operator<<(ostream& out, const Graph& g) {
   Node node{Node(0)};
   for (auto v: g.g) {
     cout << node << ":";
-    for (auto e: v.getList()) {
-      cout << " " << e; 
-    }
+    cout << v;
     cout << endl;
     ++node;
   }
