@@ -3,6 +3,7 @@
 
 using namespace std;
 
+//=============================================================================
 class Edge {
 public:
   Edge(int n = 0, int d = 0)
@@ -25,6 +26,7 @@ private:
   int distance; 
 };
 
+//=============================================================================
 class Vertex {
 public:
   Vertex() {};
@@ -35,13 +37,15 @@ public:
   vector<Edge> v;
 };
 
+//=============================================================================
 class Graph {
 public:
   int getNumVertices() { return g.size(); }; // V() returns the number of vertices in the graph
   int getNumEdges(); // E() returns the number of edges in the graph
 // adjacent (G, x, y): tests whether there is an edge   from node x to node y.
 // neighbors (G, x): lists all nodes y such that there is an edge from x to y.
-  void add(int node1, int node2 = 0, int distance = 0); // (G, x, y): adds to G the edge from x to y, if it is not there.
+  void add(int node1, int node2, int distance); // (G, x, y): adds to G the edge from x to y, if it is not there.
+  void add(int node);
 // delete (G, x, y): removes the edge from x to y, if it is there.
 // get_node_value (G, x): returns the value associated with the node x.
 // set_node_value( G, x, a): sets the value associated with the node x to a.
@@ -73,10 +77,43 @@ void Graph::add(int node1, int node2, int distance) {
   }
 }
 
-int main() {
-  enum Nodes { S, A, B, C, D, E, F, G, T };
-  Graph g;
+void Graph::add(int node) {
+  if(node >= getNumVertices()) {
+    Vertex v;
+    g.push_back(v);
+  }
+}
 
+//=============================================================================
+typedef enum { S, A, B, C, D, E, F, G, T } Nodes;
+constexpr int NUM_NODES = int(T) + 1; 
+ostream& operator<<(ostream& out, const Nodes& n) {
+  switch(n) {
+  case S: out << "S"; break;
+  case A: out << "A"; break;
+  case B: out << "B"; break;
+  case C: out << "C"; break;
+  case D: out << "D"; break;
+  case E: out << "E"; break;
+  case F: out << "F"; break;
+  case G: out << "G"; break;
+  case T: out << "T"; break;
+  }
+  return out;
+}
+
+Nodes operator++(Nodes& n) { 
+  n = static_cast<Nodes>((static_cast<int>(n) + 1) % NUM_NODES);
+  return n; 
+}
+Nodes operator++(Nodes& n, int) {
+  Nodes temp = n;
+  n = Nodes((int(n) + 1) % NUM_NODES);
+  return temp;
+}
+
+//=============================================================================
+void addExampleGraph(Graph& g) {
   g.add(Nodes::S, Nodes::A, 4);
   g.add(Nodes::S, Nodes::B, 3);
   g.add(Nodes::S, Nodes::D, 7);
@@ -110,13 +147,24 @@ int main() {
 
   g.add(Nodes::T, Nodes::F, 5);
   cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
+}
 
-  int node{0};
+void printExampleGraph(const Graph& g) {
+  Nodes node{S};
   for (auto v: g.g) {
+    cout << node << ":";
     for (auto e: v.v) {
-      cout << node << ": " << e << endl;
+      cout << " " << e; 
     }
+    cout << endl;
     ++node;
   }
+}
+
+//=============================================================================
+int main() {
+  Graph g;
+  addExampleGraph(g);
+  printExampleGraph(g);
   return 0;
 }
