@@ -92,14 +92,20 @@ public:
   bool isNodePresent(Node node); //tests whether a node is present in the graph
   bool isEdgePresent(Node nodeX, Node nodeY);// adjacent (G, x, y): tests whether there is an edge from node x to node y.
   const Vertex& getNeighborsList(Node nodeX); // neighbors (G, x): lists all nodes y such that there is an edge from x to y.
-  void add(Node nodeX, Node nodeY, int distance); // (G, x, y): adds to G the edge from x to y, if it is not there.
-  void add(Node node);
+  void addEdge(Node nodeX, Node nodeY, int distance); // (G, x, y): adds to G the edge from x to y, if it is not there.
+  void addNode(Node node);
 // delete (G, x, y): removes the edge from x to y, if it is there.
 // get_node_value (G, x): returns the value associated with the node x.
 // set_node_value( G, x, a): sets the value associated with the node x to a.
 // get_edge_value( G, x, y): returns the value associated to the edge (x,y).
 // set_edge_value (G, x, y, v): sets the value associated to the edge (x,y) to v.
-// One important consideration for the Graph class is how to represent the graph as a member ADT. Two basic implementations are generally considered: adjacency list and adjacency matrix depending on the relative edge density. For sparse graphs, the list approach is typically more efficient, but for dense graphs, the matrix approach can be more efficient (reference an Algorithm’s source for space and time analysis). Note in some cases such as add(G, x, y) you may also want to have the edge carry along its cost. Another approach could be to use (x, y) to index a cost stored in an associated array or map.
+
+// One important consideration for the Graph class is how to represent the graph as a member ADT. 
+// Two basic implementations are generally considered: adjacency list and adjacency matrix depending on the relative edge density. 
+// For sparse graphs, the list approach is typically more efficient, but for dense graphs, the matrix approach can be more efficient 
+// (reference an Algorithm’s source for space and time analysis). 
+// Note in some cases such as add(G, x, y) you may also want to have the edge carry along its cost. 
+// Another approach could be to use (x, y) to index a cost stored in an associated array or map.
   friend ostream& operator<<(ostream& out, const Graph& g);
 
 private:
@@ -126,7 +132,12 @@ bool Graph::isEdgePresent(Node nodeX, Node nodeY) {
   return edgeFound;
 }
 
-void Graph::add(Node nodeX, Node nodeY, int distance) {
+const Vertex& Graph::getNeighborsList(Node nodeX) {
+  assert(isNodePresent(nodeX));
+  return g.at(size_t(nodeX));
+}
+
+void Graph::addEdge(Node nodeX, Node nodeY, int distance) {
   Edge e{nodeY, distance};
   if (!isNodePresent(nodeX)) {
     Vertex v;
@@ -138,16 +149,11 @@ void Graph::add(Node nodeX, Node nodeY, int distance) {
   }
 }
 
-void Graph::add(Node node) {
+void Graph::addNode(Node node) {
   if(int(node) >= getNumVertices()) {
     Vertex v;
     g.push_back(v);
   }
-}
-
-const Vertex& Graph::getNeighborsList(Node nodeX) {
-  assert(isNodePresent(nodeX));
-  return g.at(size_t(nodeX));
 }
 
 ostream& operator<<(ostream& out, const Graph& g) {
@@ -164,38 +170,38 @@ ostream& operator<<(ostream& out, const Graph& g) {
 
 //=============================================================================
 void addExampleGraph(Graph& g) {
-  g.add(Node::S, Node::A, 4);
-  g.add(Node::S, Node::B, 3);
-  g.add(Node::S, Node::D, 7);
+  g.addEdge(Node::S, Node::A, 4);
+  g.addEdge(Node::S, Node::B, 3);
+  g.addEdge(Node::S, Node::D, 7);
   cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
 
-  g.add(Node::A, Node::C, 1);
+  g.addEdge(Node::A, Node::C, 1);
   cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
 
-  g.add(Node::B, Node::D, 4);
-  g.add(Node::B, Node::S, 3);
+  g.addEdge(Node::B, Node::D, 4);
+  g.addEdge(Node::B, Node::S, 3);
   cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
 
-  g.add(Node::C, Node::D, 3);
-  g.add(Node::C, Node::E, 1);
+  g.addEdge(Node::C, Node::D, 3);
+  g.addEdge(Node::C, Node::E, 1);
   cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
 
-  g.add(Node::D, Node::F, 5);
-  g.add(Node::D, Node::T, 3);
+  g.addEdge(Node::D, Node::F, 5);
+  g.addEdge(Node::D, Node::T, 3);
   cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
 
-  g.add(Node::E, Node::G, 2);
-  g.add(Node::E, Node::T, 4);
+  g.addEdge(Node::E, Node::G, 2);
+  g.addEdge(Node::E, Node::T, 4);
   cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
 
-  g.add(Node::F);
+  g.addNode(Node::F);
   cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
 
-  g.add(Node::G, Node::T, 3);
-  g.add(Node::G, Node::E, 2);
+  g.addEdge(Node::G, Node::T, 3);
+  g.addEdge(Node::G, Node::E, 2);
   cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
 
-  g.add(Node::T, Node::F, 5);
+  g.addEdge(Node::T, Node::F, 5);
   cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
 }
 
