@@ -49,7 +49,7 @@ ostream& operator<<(ostream& out, const vector<Node>& nodes) {
 //=============================================================================
 class Edge {
 public:
-  Edge(Node n, int d = 0)
+  Edge(Node n, size_t d)
     : node{n}, distance{d} {}
 
   Node getNode() { return node; }
@@ -64,7 +64,7 @@ public:
     return out;
   }
   Node node;
-  int distance; 
+  size_t distance; 
 };
 
 //=============================================================================
@@ -75,8 +75,8 @@ public:
   void deleteEdge(Node node);
   int getNumEdges() { return edges.size(); }
   bool isNodePresent(const Node node);
-  int getEdgeValue(const Node node);
-  void setEdgeValue(const Node node, int distance);
+  size_t getEdgeValue(const Node node);
+  void setEdgeValue(const Node node, size_t distance);
   friend ostream& operator<<(ostream& out, const Vertex& v);
 
 private:
@@ -103,7 +103,7 @@ void Vertex::deleteEdge(Node node) {
   }
 }
 
-int Vertex::getEdgeValue(const Node node) {
+size_t Vertex::getEdgeValue(const Node node) {
   for (auto e = edges.begin(); e != edges.end(); ++e) {
     if (e->getNode() == node) {
       return e->getDistance();
@@ -112,7 +112,7 @@ int Vertex::getEdgeValue(const Node node) {
   return 0;
 }
 
-void Vertex::setEdgeValue(const Node node, int distance) {
+void Vertex::setEdgeValue(const Node node, size_t distance) {
   for (auto e = edges.begin(); e != edges.end(); ++e) {
     if (e->getNode() == node) {
       return e->setDistance(distance);
@@ -137,13 +137,13 @@ public:
   bool isEdgePresent(Node nodeX, Node nodeY);// adjacent (G, x, y): tests whether there is an edge from node x to node y.
   const Vertex& getNeighborsList(Node nodeX); // neighbors (G, x): lists all nodes y such that there is an edge from x to y.
   void addNode(Node node);
-  void addEdge(Node nodeX, Node nodeY, int distance); // (G, x, y): adds to G the edge from x to y, if it is not there.
+  void addEdge(Node nodeX, Node nodeY, size_t distance); // (G, x, y): adds to G the edge from x to y, if it is not there.
   void deleteEdge(Node nodeX, Node nodeY); // delete (G, x, y): removes the edge from x to y, if it is there.
   int getNodeValue(Node node); // get_node_value (G, x): returns the value associated with the node x.
   // setNodeValue is not needed since we are using the vertex index as the node value
   // set_node_value( G, x, a): sets the value associated with the node x to a.
-  int getEdgeValue(Node nodeX, Node nodeY); // get_edge_value( G, x, y): returns the value associated to the edge (x,y).
-  void setEdgeValue(Node nodeX, Node nodeY, int distance);// set_edge_value (G, x, y, v): sets the value associated to the edge (x,y) to v.
+  size_t getEdgeValue(Node nodeX, Node nodeY); // get_edge_value( G, x, y): returns the value associated to the edge (x,y).
+  void setEdgeValue(Node nodeX, Node nodeY, size_t distance);// set_edge_value (G, x, y, v): sets the value associated to the edge (x,y) to v.
 
   friend ostream& operator<<(ostream& out, const Graph& g);
 
@@ -189,7 +189,7 @@ void Graph::addNode(Node node) {
   }
 }
 
-void Graph::addEdge(Node nodeX, Node nodeY, int distance) {
+void Graph::addEdge(Node nodeX, Node nodeY, size_t distance) {
   Edge e{nodeY, distance};
   if (!isNodePresent(nodeX)) {
     Vertex v;
@@ -213,14 +213,14 @@ int Graph::getNodeValue(Node node) {
   return INVALID_NODE;
 }
 
-int Graph::getEdgeValue(Node nodeX, Node nodeY) {
+size_t Graph::getEdgeValue(Node nodeX, Node nodeY) {
   if (isEdgePresent(nodeX, nodeY)) {
     return vertices.at(size_t(nodeX)).getEdgeValue(nodeY);
   }
   return 0;
 }
 
-void Graph::setEdgeValue(Node nodeX, Node nodeY, int distance) {
+void Graph::setEdgeValue(Node nodeX, Node nodeY, size_t distance) {
   if (isEdgePresent(nodeX, nodeY)) {
     return vertices.at(size_t(nodeX)).setEdgeValue(nodeY, distance);
   }
@@ -291,7 +291,7 @@ public:
   Graph& getGraph() { return g; }
   const vector<Vertex>& getVertices(); // vertices(List): list of vertices in G(V,E).
   const vector<Node>& path(Node begin, Node end) const; // path(u, w): find shortest path between u-w and returns the sequence of vertices representing shortest path u-v1-v2-…-vn-w.
-  int pathSize(Node nodeStart, Node nodeEnd); // path_size(u, w): return the path cost associated with the shortest path.
+  size_t pathSize(Node nodeStart, Node nodeEnd); // path_size(u, w): return the path cost associated with the shortest path.
 
 private:
   Graph g;
@@ -312,9 +312,9 @@ const vector<Node>& ShortestPath::path(Node begin, Node end) const {
   return nodes;
 }
 
-int ShortestPath::pathSize(Node begin, Node end) {
+size_t ShortestPath::pathSize(Node begin, Node end) {
   const vector<Node>& nodes = path(begin, end);
-  int distance{0};
+  size_t distance{0};
   size_t numNodes{nodes.size()}, index{0};
   while (numNodes-- > 1) {
     distance += g.getEdgeValue(nodes[index], nodes[index+1]);
