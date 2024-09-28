@@ -392,7 +392,6 @@ void ShortestPath::traverseNeighbors(Node u) {
   Vertex neighbors = g.getNeighborsList(u);
   cout << "neighbors: " << neighbors << endl;
   for (auto e: neighbors.getEdges()) {
-    cout << "edge: " << u << "->" << e << endl;
     Node v = e.getNode();
     if (isNodeNotVisited(v)) {
       size_t alt = calcTotalDistanceToNeighbor(u,v);
@@ -405,7 +404,7 @@ size_t ShortestPath::calcTotalDistanceToNeighbor(Node u, Node v) {
   // alt = dist[u] + G.edges(u,v)
   size_t alt{dist[size_t(u)]};
   alt += g.getEdgeValue(u, v);
-  cout << "u: " << u << ", v: " << v << ", alt: " << alt << endl;
+  cout << "alt: " << u << "," << v << "," << alt << endl;
   return alt;
 }
 
@@ -427,9 +426,9 @@ vector<Node>& ShortestPath::path(Node u, Node w) {
   while( Q.size() > 0) { // while Q is not empty
     cout << "===============" << endl;
     Node u{findNodeWithMinDistance()};
-    markNodeAsVisited(u);
     if (u == destination)
       break;
+    markNodeAsVisited(u);
     traverseNeighbors(u);
   }
   return createShortestPathFromPrevNodesList();
