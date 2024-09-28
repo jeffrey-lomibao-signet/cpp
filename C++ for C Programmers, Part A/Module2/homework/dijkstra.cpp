@@ -20,6 +20,7 @@ ostream& operator<<(ostream& out, const Node& n) {
   case Node::F: out << "F"; break;
   case Node::G: out << "G"; break;
   case Node::T: out << "T"; break;
+  default: out << "-";
   }
   return out;
 }
@@ -75,6 +76,7 @@ class Vertex {
   friend class Graph;
 
 public:
+  vector<Edge>& getEdges() { return edges; };
   void addEdge(Edge e) { edges.push_back(e); }
   void deleteEdge(Node node);
   int getNumEdges() { return edges.size(); }
@@ -258,7 +260,62 @@ void Graph::setEdgeValue(Node nodeX, Node nodeY, size_t distance) {
 }
 
 //=============================================================================
+class Path {
+  friend ostream& operator<<(ostream& out, const Path& p);
+  friend class ShortestPath;
+
+public:
+  Path(Node n, Edge e): node{n}, edge(e) {}
+  friend class Paths;
+
+private:
+  Node node;
+  Edge edge;
+};
+
+ostream& operator<<(ostream& out, const Path& p) {
+  cout << "[" << p.node << "," << p.edge << "]";
+  return out;
+}
+
+ostream& operator<<(ostream& out, const vector<Path>& paths) {
+  for (Path p: paths) {
+    cout << p << " ";
+  }
+  return out;
+}
+
+//=============================================================================
+class Paths {
+  friend ostream& operator<<(ostream& out, const Paths& paths);
+public:
+  size_t getPathValue(size_t index);
+  
+private:
+  vector<vector<Path>> list;
+};
+
+ostream& operator<<(ostream& out, const Paths& paths) {
+  for (auto p: paths.list) {
+    cout << p << endl;
+  }
+  return out;
+}
+
+size_t Paths::getPathValue(size_t index) {
+  size_t value{0};
+  if (index < list.size()) {
+    for (auto path: list.at(index)) {
+      value = path.edge.getDistance();
+    }
+  }
+  return value;
+}
+
+//=============================================================================
 class ShortestPath {
+  friend ostream& operator<<(ostream& out, const vector<size_t>& v);
+
 public:
   Graph& getGraph() { return g; }
   vector<Vertex>& getVertices(); // vertices(List): list of vertices in G(V,E).
@@ -267,32 +324,122 @@ public:
 
 private:
   Graph g;
+  vector<Node> Q;
+  size_t isNodeInQ(Node n);  
+  vector<size_t>dist;
+  vector<Node> prev;
+  vector<Node> S;
 };
+
+ostream& operator<<(ostream& out, const vector<size_t>& v) {
+  cout << "[ ";
+  Node n{Node(0)};
+  for (auto d: v) {
+    cout << "(" << n << ":" << d << ") ";
+    ++n;
+  }
+  cout << "]";
+  return out;
+}
 
 vector<Vertex>& ShortestPath::getVertices() {
   return g.vertices;
 }
 
 vector<Node>& ShortestPath::path(Node start, Node destination) {
-  static vector<Node> nodes;
-  nodes.clear();
+  // make sure graph is not empty
+  size_t numNodes = g.vertices.size();
+  assert(numNodes > 0);
+  
+  // maintain list of nodes that have not been visited
+  // vector<Node> Q;
+  Q.clear();
+  for (size_t i{0}; i < numNodes; ++i) {
+    Q.push_back(Node(i));
+  }
+  cout << "Q: " << Q << endl;
 
-  // include s in closed set
-  nodes.push_back(start);
-  
-  // include all immediate successors of s in the open set
-  Node nodeX{start};
-  vector<Vertex>& vertices{getVertices()};
-  Vertex v = vertices.at(size_t(nodeX));
-  Node nodeY = v.getNodeWithShortestDistance();
-  
-  // cout << "distance from " << nodeX << " to " << nodeY << " = " << v.getEdgeValue(nodeY) << endl;
-  // nodes.push_back(Node::A);
-  // nodes.push_back(Node::C);
-  // nodes.push_back(Node::E);
-  
-  nodes.push_back(destination);
-  return nodes;
+  // maintain shortest distance to nodes
+  dist.clear();
+  dist.push_back(0);
+  for (size_t i{1}; i < numNodes; i++) {
+    dist.push_back(SIZE_MAX);
+  }
+  cout << "dist: " << dist << endl;
+
+  // maintain list of previous nodes with shortest distance to a node
+  prev.clear();
+  for (size_t i{0}; i < numNodes; ++i) {
+    prev.push_back(Node(INVALID_NODE));
+  }
+  cout << "prev: " << prev << endl;
+
+  while( Q.size() > 0) { // while Q is not empty
+    cout << "===============" << endl;
+    // u = vertex in Q with min dist[u]
+    size_t min = SIZE_MAX;
+    Node u{Node(INVALID_NODE)};
+    for (auto i{Q.begin()}; i < Q.end(); ++i) {
+      Node n = *i;
+      if(dist[size_t(n)] < min) {
+        min = dist[size_t(n)];
+        u = n;
+      }
+    }
+    cout << "u: " << u << endl;
+    if (u == destination)
+      break;
+    
+    // remove u from Q
+    for (auto i{Q.begin()}; i < Q.end(); ++i) {
+      if (*i == u) {
+        Q.erase(i);
+        break;
+      }
+    }
+    cout << "Q: " << Q << endl;
+
+    // for each neighbor v of u still in Q
+    Vertex neighbors = g.getNeighborsList(u);
+    cout << "neighbors: " << neighbors << endl;
+    for (auto e: neighbors.getEdges()) {
+      cout << "e: " << e << endl;
+      Node v = e.getNode();
+      if (isNodeInQ(v)) {
+        size_t alt = dist[size_t(u)] + g.getEdgeValue(u, v); // alt = dist[u] + G.edges(u,v)
+        cout << "alt: " << alt << endl;
+        if (alt < dist[size_t(v)]) { // if alt < dist[v]
+          dist[size_t(v)] = alt; // dist[v] = alt
+          cout << "dist: " << dist << endl;
+          prev[size_t(v)] = u; // prev[v] = u
+          cout << "prev: " << prev << endl;
+        }
+      }
+    }
+  }
+
+  // create shortest path from prev list
+  S.clear(); // empty sequence
+  Node u{destination}; // u = target
+  if (prev[size_t(u)] != Node(INVALID_NODE) or u == start) { // if pre[u] is defined or u = source
+    while (u != Node(INVALID_NODE)) { // while u is defined
+      S.insert(S.begin(), u); // insert u at beginning of S
+      u = prev[size_t(u)]; // u = prev[u]
+    }
+  }
+
+  return S;
+}
+
+size_t ShortestPath::isNodeInQ(Node n) {
+  bool found{false};
+  for (Node node: Q) {
+    if (node == n) {
+      found = true;
+      break;
+    }
+  }
+  return found;
 }
 
 size_t ShortestPath::pathSize(Node begin, Node end) {
@@ -358,8 +505,10 @@ void addExampleGraph(Graph& g) {
 int main() {
   ShortestPath sp;
   addExampleGraph(sp.getGraph());
-  cout << "shortest path = " << sp.path(Node::S, Node::T) << endl;
-  cout << "distance = " << sp.pathSize(Node::S, Node::T) << endl;
+  auto path = sp.path(Node::S, Node::T);
+  cout << "shortest path = " << path << endl;
+  size_t distance = sp.pathSize(Node::S, Node::T);
+  cout << "distance = " << distance << endl;
 
   return 0;
 }
