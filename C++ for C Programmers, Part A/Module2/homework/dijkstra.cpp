@@ -260,75 +260,34 @@ void Graph::setEdgeValue(Node nodeX, Node nodeY, size_t distance) {
 }
 
 //=============================================================================
-class Path {
-  friend ostream& operator<<(ostream& out, const Path& p);
-  friend class ShortestPath;
-
-public:
-  Path(Node n, Edge e): node{n}, edge(e) {}
-  friend class Paths;
-
-private:
-  Node node;
-  Edge edge;
-};
-
-ostream& operator<<(ostream& out, const Path& p) {
-  cout << "[" << p.node << "," << p.edge << "]";
-  return out;
-}
-
-ostream& operator<<(ostream& out, const vector<Path>& paths) {
-  for (Path p: paths) {
-    cout << p << " ";
-  }
-  return out;
-}
-
-//=============================================================================
-class Paths {
-  friend ostream& operator<<(ostream& out, const Paths& paths);
-public:
-  size_t getPathValue(size_t index);
-  
-private:
-  vector<vector<Path>> list;
-};
-
-ostream& operator<<(ostream& out, const Paths& paths) {
-  for (auto p: paths.list) {
-    cout << p << endl;
-  }
-  return out;
-}
-
-size_t Paths::getPathValue(size_t index) {
-  size_t value{0};
-  if (index < list.size()) {
-    for (auto path: list.at(index)) {
-      value = path.edge.getDistance();
-    }
-  }
-  return value;
-}
-
-//=============================================================================
 class ShortestPath {
   friend ostream& operator<<(ostream& out, const vector<size_t>& v);
 
 public:
   Graph& getGraph() { return g; }
   vector<Vertex>& getVertices(); // vertices(List): list of vertices in G(V,E).
-  vector<Node>& path(Node start, Node destination); // path(u, w): find shortest path between u-w and returns the sequence of vertices representing shortest path u-v1-v2-…-vn-w.
-  size_t pathSize(Node start, Node destination); // path_size(u, w): return the path cost associated with the shortest path.
+  vector<Node>& path(Node u, Node w); // path(u, w): find shortest path between u-w and returns the sequence of vertices representing shortest path u-v1-v2-…-vn-w.
+  size_t pathSize(Node u, Node w); // path_size(u, w): return the path cost associated with the shortest path.
 
 private:
   Graph g;
-  vector<Node> Q;
-  size_t isNodeInQ(Node n);  
-  vector<size_t>dist;
-  vector<Node> prev;
-  vector<Node> S;
+  void initShortestPathSearch(Node u, Node w);
+  Node start, destination;
+  size_t numNodes;
+  vector<Node> Q; // list of nodes that have not been visited
+  void initNodesNotVisitedList();
+  bool isNodeNotVisited(Node n);
+  vector<size_t>dist; // list of shortest distances to nodes
+  void initShortestDistanceToNodesList();
+  vector<Node> prev; // list of previous nodes with shortest distance to a node
+  void initPreviousNodesList();
+  vector<Node> S; // list of nodes that is the shortest path
+  vector<Node>& createShortestPathFromPrevNodesList();
+  Node findNodeWithMinDistance();
+  void markNodeAsVisited(Node u);
+  void traverseNeighbors(Node u);
+  size_t calcTotalDistanceToNeighbor(Node u, Node v);
+  void updateMinDistanceAndPreviousNodesLists(Node u, Node v, size_t alt);
 };
 
 ostream& operator<<(ostream& out, const vector<size_t>& v) {
@@ -346,92 +305,15 @@ vector<Vertex>& ShortestPath::getVertices() {
   return g.vertices;
 }
 
-vector<Node>& ShortestPath::path(Node start, Node destination) {
-  // make sure graph is not empty
-  size_t numNodes = g.vertices.size();
-  assert(numNodes > 0);
-  
-  // maintain list of nodes that have not been visited
-  // vector<Node> Q;
+void ShortestPath::initNodesNotVisitedList() {
   Q.clear();
   for (size_t i{0}; i < numNodes; ++i) {
     Q.push_back(Node(i));
   }
   cout << "Q: " << Q << endl;
-
-  // maintain shortest distance to nodes
-  dist.clear();
-  dist.push_back(0);
-  for (size_t i{1}; i < numNodes; i++) {
-    dist.push_back(SIZE_MAX);
-  }
-  cout << "dist: " << dist << endl;
-
-  // maintain list of previous nodes with shortest distance to a node
-  prev.clear();
-  for (size_t i{0}; i < numNodes; ++i) {
-    prev.push_back(Node(INVALID_NODE));
-  }
-  cout << "prev: " << prev << endl;
-
-  while( Q.size() > 0) { // while Q is not empty
-    cout << "===============" << endl;
-    // u = vertex in Q with min dist[u]
-    size_t min = SIZE_MAX;
-    Node u{Node(INVALID_NODE)};
-    for (auto i{Q.begin()}; i < Q.end(); ++i) {
-      Node n = *i;
-      if(dist[size_t(n)] < min) {
-        min = dist[size_t(n)];
-        u = n;
-      }
-    }
-    cout << "u: " << u << endl;
-    if (u == destination)
-      break;
-    
-    // remove u from Q
-    for (auto i{Q.begin()}; i < Q.end(); ++i) {
-      if (*i == u) {
-        Q.erase(i);
-        break;
-      }
-    }
-    cout << "Q: " << Q << endl;
-
-    // for each neighbor v of u still in Q
-    Vertex neighbors = g.getNeighborsList(u);
-    cout << "neighbors: " << neighbors << endl;
-    for (auto e: neighbors.getEdges()) {
-      cout << "e: " << e << endl;
-      Node v = e.getNode();
-      if (isNodeInQ(v)) {
-        size_t alt = dist[size_t(u)] + g.getEdgeValue(u, v); // alt = dist[u] + G.edges(u,v)
-        cout << "alt: " << alt << endl;
-        if (alt < dist[size_t(v)]) { // if alt < dist[v]
-          dist[size_t(v)] = alt; // dist[v] = alt
-          cout << "dist: " << dist << endl;
-          prev[size_t(v)] = u; // prev[v] = u
-          cout << "prev: " << prev << endl;
-        }
-      }
-    }
-  }
-
-  // create shortest path from prev list
-  S.clear(); // empty sequence
-  Node u{destination}; // u = target
-  if (prev[size_t(u)] != Node(INVALID_NODE) or u == start) { // if pre[u] is defined or u = source
-    while (u != Node(INVALID_NODE)) { // while u is defined
-      S.insert(S.begin(), u); // insert u at beginning of S
-      u = prev[size_t(u)]; // u = prev[u]
-    }
-  }
-
-  return S;
 }
 
-size_t ShortestPath::isNodeInQ(Node n) {
+bool ShortestPath::isNodeNotVisited(Node n) {
   bool found{false};
   for (Node node: Q) {
     if (node == n) {
@@ -442,8 +324,122 @@ size_t ShortestPath::isNodeInQ(Node n) {
   return found;
 }
 
-size_t ShortestPath::pathSize(Node begin, Node end) {
-  const vector<Node>& nodes = path(begin, end);
+void ShortestPath::initShortestDistanceToNodesList() {
+  dist.clear();
+  dist.push_back(0);
+  for (size_t i{1}; i < numNodes; i++) {
+    dist.push_back(SIZE_MAX);
+  }
+  cout << "dist: " << dist << endl;
+}
+
+void ShortestPath::initPreviousNodesList() {
+  prev.clear();
+  for (size_t i{0}; i < numNodes; ++i) {
+    prev.push_back(Node(INVALID_NODE));
+  }
+  cout << "prev: " << prev << endl;
+}
+
+vector<Node>& ShortestPath::createShortestPathFromPrevNodesList() {
+  S.clear(); // empty sequence
+  Node u{destination}; // u = target
+  if (prev[size_t(u)] != Node(INVALID_NODE) or u == start) { // if pre[u] is defined or u = source
+    while (u != Node(INVALID_NODE)) { // while u is defined
+      S.insert(S.begin(), u); // insert u at beginning of S
+      u = prev[size_t(u)]; // u = prev[u]
+    }
+  }
+  return S;
+}
+
+Node ShortestPath::findNodeWithMinDistance() {
+  size_t min = SIZE_MAX;
+  Node u{Node(INVALID_NODE)};
+  for (auto i{Q.begin()}; i < Q.end(); ++i) {
+    Node n = *i;
+    if(dist[size_t(n)] < min) {
+      min = dist[size_t(n)];
+      u = n;
+    }
+  }
+  cout << "u: " << u << endl;
+  return u;
+}
+
+void ShortestPath::markNodeAsVisited(Node u) {
+  // remove u from Q
+  for (auto i{Q.begin()}; i < Q.end(); ++i) {
+    if (*i == u) {
+      Q.erase(i);
+      break;
+    }
+  }
+  cout << "Q: " << Q << endl;
+}
+
+void ShortestPath::updateMinDistanceAndPreviousNodesLists(Node u, Node v, size_t alt) {
+  if (alt < dist[size_t(v)]) { // if alt < dist[v]
+    dist[size_t(v)] = alt; // dist[v] = alt
+    cout << "dist: " << dist << endl;
+    prev[size_t(v)] = u; // prev[v] = u
+    cout << "prev: " << prev << endl;
+  }
+}
+
+void ShortestPath::traverseNeighbors(Node u) {
+  // for each neighbor v of u still in Q
+  Vertex neighbors = g.getNeighborsList(u);
+  cout << "neighbors: " << neighbors << endl;
+  for (auto e: neighbors.getEdges()) {
+    cout << "edge: " << u << "->" << e << endl;
+    Node v = e.getNode();
+    if (isNodeNotVisited(v)) {
+      size_t alt = calcTotalDistanceToNeighbor(u,v);
+      updateMinDistanceAndPreviousNodesLists(u,v,alt);
+    }
+  }
+}
+
+size_t ShortestPath::calcTotalDistanceToNeighbor(Node u, Node v) {
+  // alt = dist[u] + G.edges(u,v)
+  size_t alt{dist[size_t(u)]};
+  alt += g.getEdgeValue(u, v);
+  cout << "u: " << u << ", v: " << v << ", alt: " << alt << endl;
+  return alt;
+}
+
+void ShortestPath::initShortestPathSearch(Node u, Node w) {
+  // make sure graph is not empty
+  numNodes = g.getNumVertices();
+  assert(numNodes > 0);
+  start = u;
+  destination = w;
+  initNodesNotVisitedList();
+  initShortestDistanceToNodesList();
+  initPreviousNodesList();
+}
+
+vector<Node>& ShortestPath::path(Node u, Node w) {
+  // Use Dijkstra's algorithm as described here:
+  // https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
+  initShortestPathSearch(u,w);
+  while( Q.size() > 0) { // while Q is not empty
+    cout << "===============" << endl;
+    Node u{findNodeWithMinDistance()};
+    markNodeAsVisited(u);
+    if (u == destination)
+      break;
+    traverseNeighbors(u);
+  }
+  return createShortestPathFromPrevNodesList();
+}
+
+size_t ShortestPath::pathSize(Node u, Node w) {
+  vector<Node>& nodes{S};
+  if (u != start or w != destination) {
+    nodes = path(start, destination);
+  }
   size_t distance{0};
   size_t numNodes{nodes.size()}, index{0};
   while (numNodes-- > 1) {
@@ -487,12 +483,13 @@ void addExampleGraph(Graph& g) {
   cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
 
   g.addEdge(Node::T, Node::F, 5);
+  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
+
   g.addEdge(Node::S, Node::T, 20);
   cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
-  cout << "Graph:" << endl << g;
-
   g.deleteEdge(Node::S, Node::T);
   cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
+
   cout << "Graph:" << endl << g;
 
   cout << "S->A = " << g.getEdgeValue(Node::S, Node::A) << endl;
