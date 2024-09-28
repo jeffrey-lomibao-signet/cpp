@@ -48,29 +48,33 @@ ostream& operator<<(ostream& out, const vector<Node>& nodes) {
 
 //=============================================================================
 class Edge {
-public:
-  Edge(Node n, size_t d)
-    : node{n}, distance{d} {}
+  friend class Vertex;
+  friend ostream& operator<<(ostream& out, const Edge& e);
 
+public:
+  Edge(Node n, size_t d): node{n}, distance{d} {}
   Node getNode() { return node; }
-  int getDistance() { return distance; }
+  size_t getDistance() { return distance; }
   void setNode(Node n) { node = n; }
   void setDistance(int d) { distance = d; }
   void setEdge(Node n, int d) { setNode(n); setDistance(d); }
   Edge getEdge() { return Edge(node, distance); }
 
-  friend ostream& operator<<(ostream& out, const Edge& e) {
-    out << "(" << e.node << "," << e.distance << ")";
-    return out;
-  }
+private:  
   Node node;
   size_t distance; 
 };
 
+ostream& operator<<(ostream& out, const Edge& e) {
+  out << "(" << e.node << "," << e.distance << ")";
+  return out;
+}
+
 //=============================================================================
 class Vertex {
+  friend class Graph;
+
 public:
-  Vertex() {};
   void addEdge(Edge e) { edges.push_back(e); }
   void deleteEdge(Node node);
   int getNumEdges() { return edges.size(); }
@@ -78,10 +82,18 @@ public:
   size_t getEdgeValue(const Node node);
   void setEdgeValue(const Node node, size_t distance);
   friend ostream& operator<<(ostream& out, const Vertex& v);
-
+  Node getNodeWithShortestDistance();
+  
 private:
   vector<Edge> edges;
 };
+
+ostream& operator<<(ostream& out, const Vertex& v) {
+  for (auto e: v.edges) {
+    cout << " " << e; 
+  }
+  return out;
+}
 
 bool Vertex::isNodePresent(Node node) {
   bool edgeFound{false};
@@ -120,17 +132,27 @@ void Vertex::setEdgeValue(const Node node, size_t distance) {
   }
 }
 
-ostream& operator<<(ostream& out, const Vertex& v) {
-  for (auto e: v.edges) {
-    cout << " " << e; 
+Node Vertex::getNodeWithShortestDistance() {
+  Node node{Node(INVALID_NODE)};
+  size_t numEdges = edges.size();
+  if (edges.size() > 0) {
+    size_t minDistance{edges.at(0).getDistance()};
+    node = edges.at(0).getNode();
+    for (size_t i{1}; i < numEdges; ++i) {
+      if (edges.at(i).getDistance() < minDistance) {
+        node = edges.at(i).getNode();
+      }
+    }
   }
-  return out;
+  return node;
 }
 
 //=============================================================================
 class Graph {
+  friend class ShortestPath;
+  friend ostream& operator<<(ostream& out, const Graph& g);
+
 public:
-  const vector<Vertex>& getVertices() { return vertices; }
   int getNumVertices() { return vertices.size(); } // V() returns the number of vertices in the graph
   int getNumEdges(); // E() returns the number of edges in the graph
   bool isNodePresent(Node node); //tests whether a node is present in the graph
@@ -145,8 +167,6 @@ public:
   size_t getEdgeValue(Node nodeX, Node nodeY); // get_edge_value( G, x, y): returns the value associated to the edge (x,y).
   void setEdgeValue(Node nodeX, Node nodeY, size_t distance);// set_edge_value (G, x, y, v): sets the value associated to the edge (x,y) to v.
 
-  friend ostream& operator<<(ostream& out, const Graph& g);
-
 private:
   // One important consideration for the Graph class is how to represent the graph as a member ADT. 
   // Two basic implementations are generally considered: adjacency list and adjacency matrix depending on the relative edge density. 
@@ -156,6 +176,17 @@ private:
   // Another approach could be to use (x, y) to index a cost stored in an associated array or map.
   vector<Vertex> vertices; // use adjacency list to represent the graph
 };
+
+ostream& operator<<(ostream& out, const Graph& g) {
+  Node node{Node(0)};
+  for (auto v: g.vertices) {
+    cout << node << ":";
+    cout << v;
+    cout << endl;
+    ++node;
+  }
+  return out;
+}
 
 int Graph::getNumEdges() {
   int numEdges{0};
@@ -226,15 +257,53 @@ void Graph::setEdgeValue(Node nodeX, Node nodeY, size_t distance) {
   }
 }
 
-ostream& operator<<(ostream& out, const Graph& g) {
-  Node node{Node(0)};
-  for (auto v: g.vertices) {
-    cout << node << ":";
-    cout << v;
-    cout << endl;
-    ++node;
+//=============================================================================
+class ShortestPath {
+public:
+  Graph& getGraph() { return g; }
+  vector<Vertex>& getVertices(); // vertices(List): list of vertices in G(V,E).
+  vector<Node>& path(Node start, Node destination); // path(u, w): find shortest path between u-w and returns the sequence of vertices representing shortest path u-v1-v2-…-vn-w.
+  size_t pathSize(Node start, Node destination); // path_size(u, w): return the path cost associated with the shortest path.
+
+private:
+  Graph g;
+};
+
+vector<Vertex>& ShortestPath::getVertices() {
+  return g.vertices;
+}
+
+vector<Node>& ShortestPath::path(Node start, Node destination) {
+  static vector<Node> nodes;
+  nodes.clear();
+
+  // include s in closed set
+  nodes.push_back(start);
+  
+  // include all immediate successors of s in the open set
+  Node nodeX{start};
+  vector<Vertex>& vertices{getVertices()};
+  Vertex v = vertices.at(size_t(nodeX));
+  Node nodeY = v.getNodeWithShortestDistance();
+  
+  // cout << "distance from " << nodeX << " to " << nodeY << " = " << v.getEdgeValue(nodeY) << endl;
+  // nodes.push_back(Node::A);
+  // nodes.push_back(Node::C);
+  // nodes.push_back(Node::E);
+  
+  nodes.push_back(destination);
+  return nodes;
+}
+
+size_t ShortestPath::pathSize(Node begin, Node end) {
+  const vector<Node>& nodes = path(begin, end);
+  size_t distance{0};
+  size_t numNodes{nodes.size()}, index{0};
+  while (numNodes-- > 1) {
+    distance += g.getEdgeValue(nodes[index], nodes[index+1]);
+    ++index;
   }
-  return out;
+  return distance;
 }
 
 //=============================================================================
@@ -283,44 +352,6 @@ void addExampleGraph(Graph& g) {
   cout << "G->T = " << g.getEdgeValue(Node::G, Node::T) << endl;
   g.setEdgeValue(Node::G, Node::T, 5);
   cout << "G->T = " << g.getEdgeValue(Node::G, Node::T) << endl;
-}
-
-//=============================================================================
-class ShortestPath {
-public:
-  Graph& getGraph() { return g; }
-  const vector<Vertex>& getVertices(); // vertices(List): list of vertices in G(V,E).
-  const vector<Node>& path(Node begin, Node end) const; // path(u, w): find shortest path between u-w and returns the sequence of vertices representing shortest path u-v1-v2-…-vn-w.
-  size_t pathSize(Node nodeStart, Node nodeEnd); // path_size(u, w): return the path cost associated with the shortest path.
-
-private:
-  Graph g;
-};
-
-const vector<Vertex>& ShortestPath::getVertices() {
-  return g.getVertices();
-}
-
-const vector<Node>& ShortestPath::path(Node begin, Node end) const {
-  static vector<Node> nodes;
-  nodes.clear();
-  nodes.push_back(begin);
-  // nodes.push_back(Node::A);
-  // nodes.push_back(Node::C);
-  // nodes.push_back(Node::E);
-  nodes.push_back(end);
-  return nodes;
-}
-
-size_t ShortestPath::pathSize(Node begin, Node end) {
-  const vector<Node>& nodes = path(begin, end);
-  size_t distance{0};
-  size_t numNodes{nodes.size()}, index{0};
-  while (numNodes-- > 1) {
-    distance += g.getEdgeValue(nodes[index], nodes[index+1]);
-    ++index;
-  }
-  return distance;
 }
 
 //=============================================================================
