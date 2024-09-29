@@ -560,7 +560,7 @@ int main() {
   Graph gExample{createExampleGraph()};
   testShortestPath(gExample, Node::S, Node::T);
 
-  Graph gWiki{createExampleGraph()};
+  Graph gWiki{createWikipediaGraph()};
   testShortestPath(gWiki, Node::A, Node::E);
 
   return 0;
