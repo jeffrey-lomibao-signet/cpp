@@ -86,7 +86,6 @@ public:
   Distance getEdgeValue(const Node node);
   void setEdgeValue(const Node node, Distance distance);
   friend ostream& operator<<(ostream& out, const Vertex& v);
-  Node getNodeWithShortestDistance();
   
 private:
   vector<Edge> edges;
@@ -134,21 +133,6 @@ void Vertex::setEdgeValue(const Node node, Distance distance) {
       return e->setDistance(distance);
     }
   }
-}
-
-Node Vertex::getNodeWithShortestDistance() {
-  Node node{Node(INVALID_NODE)};
-  size_t numEdges = edges.size();
-  if (edges.size() > 0) {
-    Distance minDistance{edges.at(0).getDistance()};
-    node = edges.at(0).getNode();
-    for (size_t i{1}; i < numEdges; ++i) {
-      if (edges.at(i).getDistance() < minDistance) {
-        node = edges.at(i).getNode();
-      }
-    }
-  }
-  return node;
 }
 
 //=============================================================================
