@@ -20,7 +20,7 @@ ostream& operator<<(ostream& out, const Node& n) {
   case Node::F: out << "F"; break;
   case Node::G: out << "G"; break;
   case Node::T: out << "T"; break;
-  default: out << "-";
+  default: out << int(n);
   }
   return out;
 }
