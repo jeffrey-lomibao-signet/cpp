@@ -275,17 +275,18 @@ private:
   void initShortestPathSearch(Node u, Node w);
   Node start, destination;
   size_t numNodes;
-  vector<Node> Q; // list of nodes that have not been visited
-  void initNodesNotVisitedList();
-  bool isNodeNotVisited(Node n);
+  vector<Node> openNodes;
+  void initOpenNodesList();
+  bool hasOpenNode();
+  bool isNodeOpen(Node n);
+  void closeNode(Node u);
   vector<Distance>dist; // list of shortest distances to nodes
   void initShortestDistanceToNodesList();
   vector<Node> prev; // list of previous nodes with shortest distance to a node
   void initPreviousNodesList();
   vector<Node> S; // list of nodes that is the shortest path
   vector<Node>& createShortestPathFromPrevNodesList();
-  Node findNodeWithMinDistance();
-  void markNodeAsVisited(Node u);
+  Node findOpenNodeWithMinDistance();
   void traverseNeighbors(Node u);
   Distance calcTotalDistanceToNeighbor(Node u, Node v);
   void updateMinDistanceAndPreviousNodesLists(Node u, Node v, Distance alt);
@@ -312,28 +313,42 @@ void ShortestPath::initShortestPathSearch(Node u, Node w) {
   assert(numNodes > 0);
   start = u;
   destination = w;
-  initNodesNotVisitedList();
+  initOpenNodesList();
   initShortestDistanceToNodesList();
   initPreviousNodesList();
 }
 
-void ShortestPath::initNodesNotVisitedList() {
-  Q.clear();
+void ShortestPath::initOpenNodesList() {
+  openNodes.clear();
   for (size_t i{0}; i < numNodes; ++i) {
-    Q.push_back(Node(i));
+    openNodes.push_back(Node(i));
   }
-  cout << "Q: " << Q << endl;
+  cout << "Q: " << openNodes << endl;
 }
 
-bool ShortestPath::isNodeNotVisited(Node n) {
+bool ShortestPath::hasOpenNode() {
+  return (openNodes.size() > 0);
+}
+
+bool ShortestPath::isNodeOpen(Node n) {
   bool found{false};
-  for (Node node: Q) {
+  for (Node node: openNodes) {
     if (node == n) {
       found = true;
       break;
     }
   }
   return found;
+}
+
+void ShortestPath::closeNode(Node u) {
+  for (auto i{openNodes.begin()}; i < openNodes.end(); ++i) {
+    if (*i == u) {
+      openNodes.erase(i);
+      break;
+    }
+  }
+  cout << "Q: " << openNodes << endl;
 }
 
 void ShortestPath::initShortestDistanceToNodesList() {
@@ -365,10 +380,10 @@ vector<Node>& ShortestPath::createShortestPathFromPrevNodesList() {
   return S;
 }
 
-Node ShortestPath::findNodeWithMinDistance() {
+Node ShortestPath::findOpenNodeWithMinDistance() {
   Distance min = MAX_DISTANCE;
   Node u{Node(INVALID_NODE)};
-  for (auto i{Q.begin()}; i < Q.end(); ++i) {
+  for (auto i{openNodes.begin()}; i < openNodes.end(); ++i) {
     Node n = *i;
     if(dist[size_t(n)] < min) {
       min = dist[size_t(n)];
@@ -377,17 +392,6 @@ Node ShortestPath::findNodeWithMinDistance() {
   }
   cout << "u: " << u << endl;
   return u;
-}
-
-void ShortestPath::markNodeAsVisited(Node u) {
-  // remove u from Q
-  for (auto i{Q.begin()}; i < Q.end(); ++i) {
-    if (*i == u) {
-      Q.erase(i);
-      break;
-    }
-  }
-  cout << "Q: " << Q << endl;
 }
 
 void ShortestPath::updateMinDistanceAndPreviousNodesLists(Node u, Node v, Distance alt) {
@@ -404,7 +408,7 @@ void ShortestPath::traverseNeighbors(Node u) {
   vector<Node> neighbors = g.neighbors(u);
   cout << "neighbors: " << neighbors << endl;
   for (auto v: neighbors) {
-    if (isNodeNotVisited(v)) {
+    if (isNodeOpen(v)) {
       Distance alt = calcTotalDistanceToNeighbor(u,v);
       updateMinDistanceAndPreviousNodesLists(u,v,alt);
     }
@@ -423,12 +427,12 @@ vector<Node>& ShortestPath::path(Node u, Node w) {
   // Use Dijkstra's algorithm as described here:
   // "https://en.wikipedia.org/wiki/Dijkstra's_algorithm"
   initShortestPathSearch(u,w);
-  while( Q.size() > 0) { // while Q is not empty
+  while(hasOpenNode()) {
     cout << "===============" << endl;
-    Node u{findNodeWithMinDistance()};
+    Node u{findOpenNodeWithMinDistance()};
     if (u == destination or u == Node(INVALID_NODE))
       break;
-    markNodeAsVisited(u);
+    closeNode(u);
     traverseNeighbors(u);
   }
   cout << "===============" << endl;
@@ -523,8 +527,9 @@ Graph createWikipediaGraph() {
 // Place the edge in the graph if a random probability calculation is less than the density. 
 // Compute for a set of randomly generated graphs an average shortest path. 
 
-Graph createRandomGraph(size_t numNodes) {
-  Graph g(numNodes);
+Graph createRandomGraph() {
+  constexpr size_t NUM_RANDOM_NODES = 50;
+  Graph g(NUM_RANDOM_NODES);
 
   cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
   cout << "Random Graph:" << endl << g;
