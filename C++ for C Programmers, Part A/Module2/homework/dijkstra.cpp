@@ -63,7 +63,7 @@ public:
 
 private:  
   Node node;
-  size_t distance; 
+  size_t distance;
 };
 
 ostream& operator<<(ostream& out, const Edge& e) {
@@ -156,28 +156,48 @@ class Graph {
 
 public:
   Graph(size_t numNodes);
-  int getNumVertices() { return vertices.size(); } // V() returns the number of vertices in the graph
-  int getNumEdges(); // E() returns the number of edges in the graph
-  bool isNodePresent(Node node); //tests whether a node is present in the graph
-  bool isEdgePresent(Node nodeX, Node nodeY);// adjacent (G, x, y): tests whether there is an edge from node x to node y.
-  const Vertex& getNeighborsList(Node nodeX); // neighbors (G, x): lists all nodes y such that there is an edge from x to y.
-  void addEdge(Node node);
-  void addEdge(Node nodeX, Node nodeY, size_t distance); // (G, x, y): adds to G the edge from x to y, if it is not there.
-  void deleteEdge(Node nodeX, Node nodeY); // delete (G, x, y): removes the edge from x to y, if it is there.
-  int getNodeValue(Node node); // get_node_value (G, x): returns the value associated with the node x.
-  // setNodeValue is not needed since we are using the vertex index as the node value
+  // V() returns the number of vertices in the graph
+  int getNumVertices() { return vertices.size(); }
+
+  // E() returns the number of edges in the graph
+  int getNumEdges();
+
+  // adjacent (G, x, y): tests whether there is an edge from node x to node y.
+  bool adjacent(Node nodeX, Node nodeY);
+
+  // neighbors (G, x): lists all nodes y such that there is an edge from x to y.
+  vector<Node> neighbors(Node nodeX);
+
+  // (G, x, y): adds to G the edge from x to y, if it is not there.
+  void addEdge(Node nodeX, Node nodeY, size_t distance); 
+
+  // delete (G, x, y): removes the edge from x to y, if it is there.
+  void deleteEdge(Node nodeX, Node nodeY);
+  
+  // get_node_value (G, x): returns the value associated with the node x.
+  int getNodeValue(Node node);
+
   // set_node_value( G, x, a): sets the value associated with the node x to a.
-  size_t getEdgeValue(Node nodeX, Node nodeY); // get_edge_value( G, x, y): returns the value associated to the edge (x,y).
-  void setEdgeValue(Node nodeX, Node nodeY, size_t distance);// set_edge_value (G, x, y, v): sets the value associated to the edge (x,y) to v.
+  void setNodeValue(Node node, size_t value);
+
+  // get_edge_value( G, x, y): returns the value associated to the edge (x,y).
+  size_t getEdgeValue(Node nodeX, Node nodeY);
+
+  // set_edge_value (G, x, y, v): sets the value associated to the edge (x,y) to v.
+  void setEdgeValue(Node nodeX, Node nodeY, size_t distance);
 
 private:
   // One important consideration for the Graph class is how to represent the graph as a member ADT. 
-  // Two basic implementations are generally considered: adjacency list and adjacency matrix depending on the relative edge density. 
-  // For sparse graphs, the list approach is typically more efficient, but for dense graphs, the matrix approach can be more efficient 
+  // Two basic implementations are generally considered: adjacency list and adjacency matrix
+  // depending on the relative edge density. 
+  // For sparse graphs, the list approach is typically more efficient.
+  // But for dense graphs, the matrix approach can be more efficient 
   // (reference an Algorithm’s source for space and time analysis). 
-  // Note in some cases such as add(G, x, y) you may also want to have the edge carry along its cost. 
+  // Note in some cases such as add(G, x, y),
+  // you may also want to have the edge carry along its cost. 
   // Another approach could be to use (x, y) to index a cost stored in an associated array or map.
   vector<Vertex> vertices; // use adjacency list to represent the graph
+  vector<size_t> nodeValues;
 };
 
 ostream& operator<<(ostream& out, const Graph& g) {
@@ -193,7 +213,8 @@ ostream& operator<<(ostream& out, const Graph& g) {
 
 Graph::Graph(size_t numNodes) {
   for (size_t i{0}; i < numNodes; ++i) {
-    addEdge(Node(i));    
+    vertices.push_back(Vertex());
+    nodeValues.push_back(SIZE_MAX);
   }
 }
 
@@ -205,63 +226,51 @@ int Graph::getNumEdges() {
   return numEdges;
 }
 
-bool Graph::isNodePresent(Node node) {
-  return int(node) < getNumVertices();
-}
-
-bool Graph::isEdgePresent(Node nodeX, Node nodeY) {
+bool Graph::adjacent(Node nodeX, Node nodeY) {
   bool edgeFound{false};
-  if(isNodePresent(nodeX)) {
-    edgeFound = vertices.at(size_t(nodeX)).isNodePresent(nodeY);
-  }
+  edgeFound = vertices.at(size_t(nodeX)).isNodePresent(nodeY);
   return edgeFound;
 }
 
-const Vertex& Graph::getNeighborsList(Node nodeX) {
-  assert(isNodePresent(nodeX));
-  return vertices.at(size_t(nodeX));
-}
-
-void Graph::addEdge(Node node) {
-  if(!isNodePresent(node)) {
-    Vertex v;
-    vertices.push_back(v);
+vector<Node> Graph::neighbors(Node nodeX) {
+  vector<Node> n;
+  Vertex v = vertices.at(size_t(nodeX));
+  for (auto e: v.getEdges()) {
+    n.push_back(e.getNode());
   }
+  return n;
 }
 
 void Graph::addEdge(Node nodeX, Node nodeY, size_t distance) {
   Edge e{nodeY, distance};
-  if (!isNodePresent(nodeX)) {
-    Vertex v;
-    v.addEdge(e);
-    vertices.push_back(v);
-  }
-  else if (!isEdgePresent(nodeX, nodeY)) {
+  if (!adjacent(nodeX, nodeY)) {
     vertices.at(size_t(nodeX)).addEdge(e);
   }
 }
 
 void Graph::deleteEdge(Node nodeX, Node nodeY) {
-  if (isEdgePresent(nodeX, nodeY)) {
+  if (adjacent(nodeX, nodeY)) {
     vertices.at(size_t(nodeX)).deleteEdge(nodeY);
   }
 }
 
 int Graph::getNodeValue(Node node) {
-  if (isNodePresent(node))
-    return int(node); 
-  return INVALID_NODE;
+  return nodeValues.at(int(node)); 
+}
+
+void Graph::setNodeValue(Node node, size_t value) {
+  nodeValues.at(int(node)) = value; 
 }
 
 size_t Graph::getEdgeValue(Node nodeX, Node nodeY) {
-  if (isEdgePresent(nodeX, nodeY)) {
+  if (adjacent(nodeX, nodeY)) {
     return vertices.at(size_t(nodeX)).getEdgeValue(nodeY);
   }
   return 0;
 }
 
 void Graph::setEdgeValue(Node nodeX, Node nodeY, size_t distance) {
-  if (isEdgePresent(nodeX, nodeY)) {
+  if (adjacent(nodeX, nodeY)) {
     return vertices.at(size_t(nodeX)).setEdgeValue(nodeY, distance);
   }
 }
@@ -407,10 +416,9 @@ void ShortestPath::updateMinDistanceAndPreviousNodesLists(Node u, Node v, size_t
 
 void ShortestPath::traverseNeighbors(Node u) {
   // for each neighbor v of u still in Q
-  Vertex neighbors = g.getNeighborsList(u);
+  vector<Node> neighbors = g.neighbors(u);
   cout << "neighbors: " << neighbors << endl;
-  for (auto e: neighbors.getEdges()) {
-    Node v = e.getNode();
+  for (auto v: neighbors) {
     if (isNodeNotVisited(v)) {
       size_t alt = calcTotalDistanceToNeighbor(u,v);
       updateMinDistanceAndPreviousNodesLists(u,v,alt);
@@ -477,8 +485,6 @@ Graph createExampleGraph() {
 
   g.addEdge(Node::E, Node::G, 2);
   g.addEdge(Node::E, Node::T, 4);
-
-  g.addEdge(Node::F);
 
   g.addEdge(Node::G, Node::T, 3);
   g.addEdge(Node::G, Node::E, 2);
