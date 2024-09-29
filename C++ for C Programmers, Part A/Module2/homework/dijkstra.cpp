@@ -48,22 +48,24 @@ ostream& operator<<(ostream& out, const vector<Node>& nodes) {
 }
 
 //=============================================================================
+using Distance = size_t;
+constexpr Distance MAX_DISTANCE = SIZE_MAX;
 class Edge {
   friend class Vertex;
   friend ostream& operator<<(ostream& out, const Edge& e);
 
 public:
-  Edge(Node n, size_t d): node{n}, distance{d} {}
+  Edge(Node n, Distance d): node{n}, distance{d} {}
   Node getNode() { return node; }
-  size_t getDistance() { return distance; }
+  Distance getDistance() { return distance; }
   void setNode(Node n) { node = n; }
-  void setDistance(int d) { distance = d; }
-  void setEdge(Node n, int d) { setNode(n); setDistance(d); }
+  void setDistance(Distance d) { distance = d; }
+  void setEdge(Node n, Distance d) { setNode(n); setDistance(d); }
   Edge getEdge() { return Edge(node, distance); }
 
 private:  
   Node node;
-  size_t distance;
+  Distance distance;
 };
 
 ostream& operator<<(ostream& out, const Edge& e) {
@@ -81,8 +83,8 @@ public:
   void deleteEdge(Node node);
   int getNumEdges() { return edges.size(); }
   bool isNodePresent(const Node node);
-  size_t getEdgeValue(const Node node);
-  void setEdgeValue(const Node node, size_t distance);
+  Distance getEdgeValue(const Node node);
+  void setEdgeValue(const Node node, Distance distance);
   friend ostream& operator<<(ostream& out, const Vertex& v);
   Node getNodeWithShortestDistance();
   
@@ -117,7 +119,7 @@ void Vertex::deleteEdge(Node node) {
   }
 }
 
-size_t Vertex::getEdgeValue(const Node node) {
+Distance Vertex::getEdgeValue(const Node node) {
   for (auto e = edges.begin(); e != edges.end(); ++e) {
     if (e->getNode() == node) {
       return e->getDistance();
@@ -126,7 +128,7 @@ size_t Vertex::getEdgeValue(const Node node) {
   return 0;
 }
 
-void Vertex::setEdgeValue(const Node node, size_t distance) {
+void Vertex::setEdgeValue(const Node node, Distance distance) {
   for (auto e = edges.begin(); e != edges.end(); ++e) {
     if (e->getNode() == node) {
       return e->setDistance(distance);
@@ -138,7 +140,7 @@ Node Vertex::getNodeWithShortestDistance() {
   Node node{Node(INVALID_NODE)};
   size_t numEdges = edges.size();
   if (edges.size() > 0) {
-    size_t minDistance{edges.at(0).getDistance()};
+    Distance minDistance{edges.at(0).getDistance()};
     node = edges.at(0).getNode();
     for (size_t i{1}; i < numEdges; ++i) {
       if (edges.at(i).getDistance() < minDistance) {
@@ -169,7 +171,7 @@ public:
   vector<Node> neighbors(Node nodeX);
 
   // (G, x, y): adds to G the edge from x to y, if it is not there.
-  void addEdge(Node nodeX, Node nodeY, size_t distance); 
+  void addEdge(Node nodeX, Node nodeY, Distance distance); 
 
   // delete (G, x, y): removes the edge from x to y, if it is there.
   void deleteEdge(Node nodeX, Node nodeY);
@@ -178,13 +180,13 @@ public:
   int getNodeValue(Node node);
 
   // set_node_value( G, x, a): sets the value associated with the node x to a.
-  void setNodeValue(Node node, size_t value);
+  void setNodeValue(Node node, Distance value);
 
   // get_edge_value( G, x, y): returns the value associated to the edge (x,y).
-  size_t getEdgeValue(Node nodeX, Node nodeY);
+  Distance getEdgeValue(Node nodeX, Node nodeY);
 
   // set_edge_value (G, x, y, v): sets the value associated to the edge (x,y) to v.
-  void setEdgeValue(Node nodeX, Node nodeY, size_t distance);
+  void setEdgeValue(Node nodeX, Node nodeY, Distance distance);
 
 private:
   // One important consideration for the Graph class is how to represent the graph as a member ADT. 
@@ -197,7 +199,7 @@ private:
   // you may also want to have the edge carry along its cost. 
   // Another approach could be to use (x, y) to index a cost stored in an associated array or map.
   vector<Vertex> vertices; // use adjacency list to represent the graph
-  vector<size_t> nodeValues;
+  vector<Distance> nodeValues;
 };
 
 ostream& operator<<(ostream& out, const Graph& g) {
@@ -214,7 +216,7 @@ ostream& operator<<(ostream& out, const Graph& g) {
 Graph::Graph(size_t numNodes) {
   for (size_t i{0}; i < numNodes; ++i) {
     vertices.push_back(Vertex());
-    nodeValues.push_back(SIZE_MAX);
+    nodeValues.push_back(MAX_DISTANCE);
   }
 }
 
@@ -241,7 +243,7 @@ vector<Node> Graph::neighbors(Node nodeX) {
   return n;
 }
 
-void Graph::addEdge(Node nodeX, Node nodeY, size_t distance) {
+void Graph::addEdge(Node nodeX, Node nodeY, Distance distance) {
   if (!adjacent(nodeX, nodeY)) {
     vertices.at(size_t(nodeX)).addEdge(Edge(nodeY, distance));
   }
@@ -257,18 +259,18 @@ int Graph::getNodeValue(Node node) {
   return nodeValues.at(int(node)); 
 }
 
-void Graph::setNodeValue(Node node, size_t value) {
+void Graph::setNodeValue(Node node, Distance value) {
   nodeValues.at(int(node)) = value; 
 }
 
-size_t Graph::getEdgeValue(Node nodeX, Node nodeY) {
+Distance Graph::getEdgeValue(Node nodeX, Node nodeY) {
   if (adjacent(nodeX, nodeY)) {
     return vertices.at(size_t(nodeX)).getEdgeValue(nodeY);
   }
   return 0;
 }
 
-void Graph::setEdgeValue(Node nodeX, Node nodeY, size_t distance) {
+void Graph::setEdgeValue(Node nodeX, Node nodeY, Distance distance) {
   if (adjacent(nodeX, nodeY)) {
     return vertices.at(size_t(nodeX)).setEdgeValue(nodeY, distance);
   }
@@ -276,13 +278,13 @@ void Graph::setEdgeValue(Node nodeX, Node nodeY, size_t distance) {
 
 //=============================================================================
 class ShortestPath {
-  friend ostream& operator<<(ostream& out, const vector<size_t>& v);
+  friend ostream& operator<<(ostream& out, const vector<Distance>& v);
 
 public:
   ShortestPath(Graph& g): g{g} {};
   vector<Vertex>& getVertices(); // vertices(List): list of vertices in G(V,E).
   vector<Node>& path(Node u, Node w); // path(u, w): find shortest path between u-w and returns the sequence of vertices representing shortest path u-v1-v2-…-vn-w.
-  size_t pathSize(Node u, Node w); // path_size(u, w): return the path cost associated with the shortest path.
+  Distance pathSize(Node u, Node w); // path_size(u, w): return the path cost associated with the shortest path.
 
 private:
   Graph& g;
@@ -292,7 +294,7 @@ private:
   vector<Node> Q; // list of nodes that have not been visited
   void initNodesNotVisitedList();
   bool isNodeNotVisited(Node n);
-  vector<size_t>dist; // list of shortest distances to nodes
+  vector<Distance>dist; // list of shortest distances to nodes
   void initShortestDistanceToNodesList();
   vector<Node> prev; // list of previous nodes with shortest distance to a node
   void initPreviousNodesList();
@@ -301,11 +303,11 @@ private:
   Node findNodeWithMinDistance();
   void markNodeAsVisited(Node u);
   void traverseNeighbors(Node u);
-  size_t calcTotalDistanceToNeighbor(Node u, Node v);
-  void updateMinDistanceAndPreviousNodesLists(Node u, Node v, size_t alt);
+  Distance calcTotalDistanceToNeighbor(Node u, Node v);
+  void updateMinDistanceAndPreviousNodesLists(Node u, Node v, Distance alt);
 };
 
-ostream& operator<<(ostream& out, const vector<size_t>& v) {
+ostream& operator<<(ostream& out, const vector<Distance>& v) {
   cout << "[ ";
   Node n{Node(0)};
   for (auto d: v) {
@@ -353,7 +355,7 @@ bool ShortestPath::isNodeNotVisited(Node n) {
 void ShortestPath::initShortestDistanceToNodesList() {
   dist.clear();
   for (size_t i{0}; i < numNodes; i++) {
-    dist.push_back(SIZE_MAX);
+    dist.push_back(MAX_DISTANCE);
   }
   dist.at(size_t(start)) = 0;
   cout << "dist: " << dist << endl;
@@ -380,7 +382,7 @@ vector<Node>& ShortestPath::createShortestPathFromPrevNodesList() {
 }
 
 Node ShortestPath::findNodeWithMinDistance() {
-  size_t min = SIZE_MAX;
+  Distance min = MAX_DISTANCE;
   Node u{Node(INVALID_NODE)};
   for (auto i{Q.begin()}; i < Q.end(); ++i) {
     Node n = *i;
@@ -404,7 +406,7 @@ void ShortestPath::markNodeAsVisited(Node u) {
   cout << "Q: " << Q << endl;
 }
 
-void ShortestPath::updateMinDistanceAndPreviousNodesLists(Node u, Node v, size_t alt) {
+void ShortestPath::updateMinDistanceAndPreviousNodesLists(Node u, Node v, Distance alt) {
   if (alt < dist[size_t(v)]) { // if alt < dist[v]
     dist[size_t(v)] = alt; // dist[v] = alt
     cout << "dist: " << dist << endl;
@@ -419,15 +421,15 @@ void ShortestPath::traverseNeighbors(Node u) {
   cout << "neighbors: " << neighbors << endl;
   for (auto v: neighbors) {
     if (isNodeNotVisited(v)) {
-      size_t alt = calcTotalDistanceToNeighbor(u,v);
+      Distance alt = calcTotalDistanceToNeighbor(u,v);
       updateMinDistanceAndPreviousNodesLists(u,v,alt);
     }
   }
 }
 
-size_t ShortestPath::calcTotalDistanceToNeighbor(Node u, Node v) {
+Distance ShortestPath::calcTotalDistanceToNeighbor(Node u, Node v) {
   // alt = dist[u] + G.edges(u,v)
-  size_t alt{dist[size_t(u)]};
+  Distance alt{dist[size_t(u)]};
   alt += g.getEdgeValue(u, v);
   cout << "alt: " << u << "," << v << "," << alt << endl;
   return alt;
@@ -449,12 +451,12 @@ vector<Node>& ShortestPath::path(Node u, Node w) {
   return createShortestPathFromPrevNodesList();
 }
 
-size_t ShortestPath::pathSize(Node u, Node w) {
+Distance ShortestPath::pathSize(Node u, Node w) {
   vector<Node>& nodes{S};
   if (u != start or w != destination) {
     nodes = path(start, destination);
   }
-  size_t distance{0};
+  Distance distance{0};
   size_t numNodes{nodes.size()}, index{0};
   while (numNodes-- > 1) {
     distance += g.getEdgeValue(nodes[index], nodes[index+1]);
@@ -511,7 +513,7 @@ void testExampleGraph() {
   ShortestPath sp(g);
   auto path = sp.path(start, dest);
   cout << "shortest path = " << path << endl;
-  size_t distance = sp.pathSize(start, dest);
+  Distance distance = sp.pathSize(start, dest);
   cout << "distance = " << distance << endl;
 }
 
@@ -545,7 +547,7 @@ void testWikipediaGraph() {
   Node start{Node::A}, dest{Node::E};
   auto path = sp.path(start, dest);
   cout << "shortest path = " << path << endl;
-  size_t distance = sp.pathSize(start, dest);
+  Distance distance = sp.pathSize(start, dest);
   cout << "distance = " << distance << endl;
 }
 
