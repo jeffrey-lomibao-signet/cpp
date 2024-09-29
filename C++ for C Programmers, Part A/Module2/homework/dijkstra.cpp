@@ -155,12 +155,13 @@ class Graph {
   friend ostream& operator<<(ostream& out, const Graph& g);
 
 public:
+  Graph(size_t numNodes);
   int getNumVertices() { return vertices.size(); } // V() returns the number of vertices in the graph
   int getNumEdges(); // E() returns the number of edges in the graph
   bool isNodePresent(Node node); //tests whether a node is present in the graph
   bool isEdgePresent(Node nodeX, Node nodeY);// adjacent (G, x, y): tests whether there is an edge from node x to node y.
   const Vertex& getNeighborsList(Node nodeX); // neighbors (G, x): lists all nodes y such that there is an edge from x to y.
-  void addNode(Node node);
+  void addEdge(Node node);
   void addEdge(Node nodeX, Node nodeY, size_t distance); // (G, x, y): adds to G the edge from x to y, if it is not there.
   void deleteEdge(Node nodeX, Node nodeY); // delete (G, x, y): removes the edge from x to y, if it is there.
   int getNodeValue(Node node); // get_node_value (G, x): returns the value associated with the node x.
@@ -190,6 +191,12 @@ ostream& operator<<(ostream& out, const Graph& g) {
   return out;
 }
 
+Graph::Graph(size_t numNodes) {
+  for (size_t i{0}; i < numNodes; ++i) {
+    addEdge(Node(i));    
+  }
+}
+
 int Graph::getNumEdges() {
   int numEdges{0};
   for(Vertex v: vertices) {
@@ -215,7 +222,7 @@ const Vertex& Graph::getNeighborsList(Node nodeX) {
   return vertices.at(size_t(nodeX));
 }
 
-void Graph::addNode(Node node) {
+void Graph::addEdge(Node node) {
   if(!isNodePresent(node)) {
     Vertex v;
     vertices.push_back(v);
@@ -264,13 +271,13 @@ class ShortestPath {
   friend ostream& operator<<(ostream& out, const vector<size_t>& v);
 
 public:
-  Graph& getGraph() { return g; }
+  ShortestPath(Graph& g): g{g} {};
   vector<Vertex>& getVertices(); // vertices(List): list of vertices in G(V,E).
   vector<Node>& path(Node u, Node w); // path(u, w): find shortest path between u-w and returns the sequence of vertices representing shortest path u-v1-v2-…-vn-w.
   size_t pathSize(Node u, Node w); // path_size(u, w): return the path cost associated with the shortest path.
 
 private:
-  Graph g;
+  Graph& g;
   void initShortestPathSearch(Node u, Node w);
   Node start, destination;
   size_t numNodes;
@@ -305,6 +312,17 @@ vector<Vertex>& ShortestPath::getVertices() {
   return g.vertices;
 }
 
+void ShortestPath::initShortestPathSearch(Node u, Node w) {
+  // make sure graph is not empty
+  numNodes = g.getNumVertices();
+  assert(numNodes > 0);
+  start = u;
+  destination = w;
+  initNodesNotVisitedList();
+  initShortestDistanceToNodesList();
+  initPreviousNodesList();
+}
+
 void ShortestPath::initNodesNotVisitedList() {
   Q.clear();
   for (size_t i{0}; i < numNodes; ++i) {
@@ -326,10 +344,10 @@ bool ShortestPath::isNodeNotVisited(Node n) {
 
 void ShortestPath::initShortestDistanceToNodesList() {
   dist.clear();
-  dist.push_back(0);
-  for (size_t i{1}; i < numNodes; i++) {
+  for (size_t i{0}; i < numNodes; i++) {
     dist.push_back(SIZE_MAX);
   }
+  dist.at(size_t(start)) = 0;
   cout << "dist: " << dist << endl;
 }
 
@@ -408,17 +426,6 @@ size_t ShortestPath::calcTotalDistanceToNeighbor(Node u, Node v) {
   return alt;
 }
 
-void ShortestPath::initShortestPathSearch(Node u, Node w) {
-  // make sure graph is not empty
-  numNodes = g.getNumVertices();
-  assert(numNodes > 0);
-  start = u;
-  destination = w;
-  initNodesNotVisitedList();
-  initShortestDistanceToNodesList();
-  initPreviousNodesList();
-}
-
 vector<Node>& ShortestPath::path(Node u, Node w) {
   // Use Dijkstra's algorithm as described here:
   // https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
@@ -426,11 +433,12 @@ vector<Node>& ShortestPath::path(Node u, Node w) {
   while( Q.size() > 0) { // while Q is not empty
     cout << "===============" << endl;
     Node u{findNodeWithMinDistance()};
-    if (u == destination)
+    if (u == destination or u == Node(INVALID_NODE))
       break;
     markNodeAsVisited(u);
     traverseNeighbors(u);
   }
+  cout << "===============" << endl;
   return createShortestPathFromPrevNodesList();
 }
 
@@ -449,62 +457,97 @@ size_t ShortestPath::pathSize(Node u, Node w) {
 }
 
 //=============================================================================
-void addExampleGraph(Graph& g) {
+Graph createExampleGraph() {
+  Graph g(NUM_NODES);
+
   g.addEdge(Node::S, Node::A, 4);
   g.addEdge(Node::S, Node::B, 3);
   g.addEdge(Node::S, Node::D, 7);
-  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
 
   g.addEdge(Node::A, Node::C, 1);
-  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
 
   g.addEdge(Node::B, Node::D, 4);
   g.addEdge(Node::B, Node::S, 3);
-  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
 
   g.addEdge(Node::C, Node::D, 3);
   g.addEdge(Node::C, Node::E, 1);
-  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
 
   g.addEdge(Node::D, Node::F, 5);
   g.addEdge(Node::D, Node::T, 3);
-  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
 
   g.addEdge(Node::E, Node::G, 2);
   g.addEdge(Node::E, Node::T, 4);
-  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
 
-  g.addNode(Node::F);
-  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
+  g.addEdge(Node::F);
 
   g.addEdge(Node::G, Node::T, 3);
   g.addEdge(Node::G, Node::E, 2);
-  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
 
   g.addEdge(Node::T, Node::F, 5);
-  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
 
   g.addEdge(Node::S, Node::T, 20);
-  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
   g.deleteEdge(Node::S, Node::T);
-  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
 
-  cout << "Graph:" << endl << g;
+  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
+  cout << "Example Graph:" << endl << g;
+
+  return g;
+}
+
+void testExampleGraph() {
+  Graph g{createExampleGraph()};
 
   cout << "S->A = " << g.getEdgeValue(Node::S, Node::A) << endl;
   cout << "G->T = " << g.getEdgeValue(Node::G, Node::T) << endl;
   g.setEdgeValue(Node::G, Node::T, 5);
   cout << "G->T = " << g.getEdgeValue(Node::G, Node::T) << endl;
+
+  Node start{Node::S}, dest{Node::T};
+  ShortestPath sp(g);
+  auto path = sp.path(start, dest);
+  cout << "shortest path = " << path << endl;
+  size_t distance = sp.pathSize(start, dest);
+  cout << "distance = " << distance << endl;
+}
+
+//=============================================================================
+Graph createWikipediaGraph() {
+  Graph g(NUM_NODES);
+
+  g.addEdge(Node::A, Node::B, 7);
+  g.addEdge(Node::A, Node::C, 9);
+  g.addEdge(Node::A, Node::F, 14);
+
+  g.addEdge(Node::B, Node::C, 10);
+  g.addEdge(Node::B, Node::D, 15);
+  
+  g.addEdge(Node::C, Node::D, 11);
+  g.addEdge(Node::C, Node::F, 2);
+
+  g.addEdge(Node::D, Node::E, 6);
+  g.addEdge(Node::E, Node::F, 9);
+  g.addEdge(Node::F, Node::E, 9);
+
+  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
+  cout << "Wikipedia Graph:" << endl << g;
+  return g;
+}
+
+void testWikipediaGraph() {
+  Graph g{createWikipediaGraph()};
+  ShortestPath sp(g);
+ 
+  Node start{Node::A}, dest{Node::E};
+  auto path = sp.path(start, dest);
+  cout << "shortest path = " << path << endl;
+  size_t distance = sp.pathSize(start, dest);
+  cout << "distance = " << distance << endl;
 }
 
 //=============================================================================
 int main() {
-  ShortestPath sp;
-  addExampleGraph(sp.getGraph());
-  auto path = sp.path(Node::S, Node::T);
-  cout << "shortest path = " << path << endl;
-  size_t distance = sp.pathSize(Node::S, Node::T);
-  cout << "distance = " << distance << endl;
+  testExampleGraph();
+  testWikipediaGraph();
 
   return 0;
 }
