@@ -5,9 +5,9 @@
 using namespace std;
 
 //=============================================================================
-enum class Node { S, A, B, C, D, E, F, G, T };
+enum class Node: int { S, A, B, C, D, E, F, G, T };
 constexpr int NUM_NODES = int(Node::T) + 1; 
-constexpr int INVALID_NODE = -1;
+constexpr Node NO_NODE = Node(-1);
 
 ostream& operator<<(ostream& out, const Node& n) {
   switch(n) {
@@ -363,7 +363,7 @@ void ShortestPath::initShortestDistanceToNodesList() {
 void ShortestPath::initPreviousNodesList() {
   prev.clear();
   for (size_t i{0}; i < numNodes; ++i) {
-    prev.push_back(Node(INVALID_NODE));
+    prev.push_back(NO_NODE);
   }
   cout << "prev: " << prev << endl;
 }
@@ -371,8 +371,8 @@ void ShortestPath::initPreviousNodesList() {
 vector<Node>& ShortestPath::createShortestPathFromPrevNodesList() {
   S.clear(); // empty sequence
   Node u{destination}; // u = target
-  if (prev[size_t(u)] != Node(INVALID_NODE) or u == start) { // if pre[u] is defined or u = source
-    while (u != Node(INVALID_NODE)) { // while u is defined
+  if (prev[size_t(u)] != NO_NODE or u == start) { // if pre[u] is defined or u = source
+    while (u != NO_NODE) { // while u is defined
       S.insert(S.begin(), u); // insert u at beginning of S
       u = prev[size_t(u)]; // u = prev[u]
     }
@@ -382,7 +382,7 @@ vector<Node>& ShortestPath::createShortestPathFromPrevNodesList() {
 
 Node ShortestPath::findOpenNodeWithMinDistance() {
   Distance min = MAX_DISTANCE;
-  Node u{Node(INVALID_NODE)};
+  Node u{NO_NODE};
   for (auto i{openNodes.begin()}; i < openNodes.end(); ++i) {
     Node n = *i;
     if(dist[size_t(n)] < min) {
@@ -430,7 +430,7 @@ vector<Node>& ShortestPath::path(Node u, Node w) {
   while(hasOpenNode()) {
     cout << "===============" << endl;
     Node u{findOpenNodeWithMinDistance()};
-    if (u == destination or u == Node(INVALID_NODE))
+    if (u == destination or u == NO_NODE)
       break;
     closeNode(u);
     traverseNeighbors(u);
@@ -527,7 +527,7 @@ Graph createWikipediaGraph() {
 // Place the edge in the graph if a random probability calculation is less than the density. 
 // Compute for a set of randomly generated graphs an average shortest path. 
 
-Graph createRandomGraph() {
+Graph createRandomGraph(double density, Distance range) {
   constexpr size_t NUM_RANDOM_NODES = 50;
   Graph g(NUM_RANDOM_NODES);
 
