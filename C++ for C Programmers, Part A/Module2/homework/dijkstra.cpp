@@ -428,7 +428,7 @@ size_t ShortestPath::calcTotalDistanceToNeighbor(Node u, Node v) {
 
 vector<Node>& ShortestPath::path(Node u, Node w) {
   // Use Dijkstra's algorithm as described here:
-  // https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
+  // "https://en.wikipedia.org/wiki/Dijkstra's_algorithm"
   initShortestPathSearch(u,w);
   while( Q.size() > 0) { // while Q is not empty
     cout << "===============" << endl;
