@@ -242,9 +242,8 @@ vector<Node> Graph::neighbors(Node nodeX) {
 }
 
 void Graph::addEdge(Node nodeX, Node nodeY, size_t distance) {
-  Edge e{nodeY, distance};
   if (!adjacent(nodeX, nodeY)) {
-    vertices.at(size_t(nodeX)).addEdge(e);
+    vertices.at(size_t(nodeX)).addEdge(Edge(nodeY, distance));
   }
 }
 
