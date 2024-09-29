@@ -261,13 +261,14 @@ void Graph::setEdgeValue(Node nodeX, Node nodeY, Distance distance) {
 }
 
 //=============================================================================
+using Path = vector<Node>;
 class ShortestPath {
   friend ostream& operator<<(ostream& out, const vector<Distance>& v);
 
 public:
   ShortestPath(Graph& g): g{g} {};
   vector<Vertex>& getVertices(); // vertices(List): list of vertices in G(V,E).
-  vector<Node>& path(Node u, Node w); // path(u, w): find shortest path between u-w and returns the sequence of vertices representing shortest path u-v1-v2-…-vn-w.
+  const Path& path(Node u, Node w); // path(u, w): find shortest path between u-w and returns the sequence of vertices representing shortest path u-v1-v2-…-vn-w.
   Distance pathSize(Node u, Node w); // path_size(u, w): return the path cost associated with the shortest path.
 
 private:
@@ -284,8 +285,8 @@ private:
   void initShortestDistanceToNodesList();
   vector<Node> prev; // list of previous nodes with shortest distance to a node
   void initPreviousNodesList();
-  vector<Node> S; // list of nodes that is the shortest path
-  vector<Node>& createShortestPathFromPrevNodesList();
+  Path S; // list of nodes that is the shortest path
+  const Path& createShortestPathFromPrevNodesList();
   Node findOpenNodeWithMinDistance();
   void traverseNeighbors(Node u);
   Distance calcTotalDistanceToNeighbor(Node u, Node v);
@@ -368,7 +369,7 @@ void ShortestPath::initPreviousNodesList() {
   cout << "prev: " << prev << endl;
 }
 
-vector<Node>& ShortestPath::createShortestPathFromPrevNodesList() {
+const Path& ShortestPath::createShortestPathFromPrevNodesList() {
   S.clear(); // empty sequence
   Node u{destination}; // u = target
   if (prev[size_t(u)] != NO_NODE or u == start) { // if pre[u] is defined or u = source
@@ -423,7 +424,7 @@ Distance ShortestPath::calcTotalDistanceToNeighbor(Node u, Node v) {
   return alt;
 }
 
-vector<Node>& ShortestPath::path(Node u, Node w) {
+const Path& ShortestPath::path(Node u, Node w) {
   // Use Dijkstra's algorithm as described here:
   // "https://en.wikipedia.org/wiki/Dijkstra's_algorithm"
   initShortestPathSearch(u,w);
@@ -440,7 +441,7 @@ vector<Node>& ShortestPath::path(Node u, Node w) {
 }
 
 Distance ShortestPath::pathSize(Node u, Node w) {
-  vector<Node>& nodes{S};
+  Path& nodes{S};
   if (u != start or w != destination) {
     nodes = path(start, destination);
   }
@@ -537,20 +538,30 @@ Graph createRandomGraph(double density, Distance range) {
 }
 
 //=============================================================================
-void testShortestPath(Graph& g, Node start, Node dest) {
+#include <tuple>
+using PathInfo = tuple<const Path, Distance>;
+PathInfo testShortestPath(Graph& g, Node start, Node dest) {
   ShortestPath sp(g);
   auto path = sp.path(start, dest);
   cout << "shortest path = " << path << endl;
   Distance distance = sp.pathSize(start, dest);
   cout << "distance = " << distance << endl;
+  return {path, distance};
 }
 
 int main() {
+  Path path;
+  Distance distance;
+
   Graph gExample{createExampleGraph()};
-  testShortestPath(gExample, Node::S, Node::T);
+  tie(path, distance) = testShortestPath(gExample, Node::S, Node::T);
+  const Path EXAMPLE_PATH = {Node::S,Node::A,Node::C,Node::E,Node::T};
+  assert(path == EXAMPLE_PATH and distance == 10);
 
   Graph gWiki{createWikipediaGraph()};
-  testShortestPath(gWiki, Node::A, Node::E);
+  tie(path, distance) = testShortestPath(gWiki, Node::A, Node::E);
+  const Path WIKI_PATH = {Node::A,Node::C,Node::F,Node::E};
+  assert(path == WIKI_PATH and distance == 20);
 
   return 0;
 }
