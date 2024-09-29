@@ -70,4 +70,4 @@ So a graph whose density is 0.1 would have 10% of its edges picked at random and
 Compute for a set of randomly generated graphs an average shortest path.
 
 URLs
-http://en.wikipedia.org/wiki/Dijkstra's_algorithm
+"http://en.wikipedia.org/wiki/Dijkstra's_algorithm"
