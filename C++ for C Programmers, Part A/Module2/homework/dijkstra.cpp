@@ -501,22 +501,6 @@ Graph createExampleGraph() {
   return g;
 }
 
-void testExampleGraph() {
-  Graph g{createExampleGraph()};
-
-  cout << "S->A = " << g.getEdgeValue(Node::S, Node::A) << endl;
-  cout << "G->T = " << g.getEdgeValue(Node::G, Node::T) << endl;
-  g.setEdgeValue(Node::G, Node::T, 5);
-  cout << "G->T = " << g.getEdgeValue(Node::G, Node::T) << endl;
-
-  Node start{Node::S}, dest{Node::T};
-  ShortestPath sp(g);
-  auto path = sp.path(start, dest);
-  cout << "shortest path = " << path << endl;
-  Distance distance = sp.pathSize(start, dest);
-  cout << "distance = " << distance << endl;
-}
-
 //=============================================================================
 Graph createWikipediaGraph() {
   Graph g(NUM_NODES);
@@ -538,17 +522,6 @@ Graph createWikipediaGraph() {
   cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
   cout << "Wikipedia Graph:" << endl << g;
   return g;
-}
-
-void testWikipediaGraph() {
-  Graph g{createWikipediaGraph()};
-  ShortestPath sp(g);
- 
-  Node start{Node::A}, dest{Node::E};
-  auto path = sp.path(start, dest);
-  cout << "shortest path = " << path << endl;
-  Distance distance = sp.pathSize(start, dest);
-  cout << "distance = " << distance << endl;
 }
 
 //=============================================================================
@@ -575,9 +548,20 @@ Graph createRandomGraph(size_t numNodes) {
 }
 
 //=============================================================================
+void testShortestPath(Graph& g, Node start, Node dest) {
+  ShortestPath sp(g);
+  auto path = sp.path(start, dest);
+  cout << "shortest path = " << path << endl;
+  Distance distance = sp.pathSize(start, dest);
+  cout << "distance = " << distance << endl;
+}
+
 int main() {
-  testExampleGraph();
-  testWikipediaGraph();
+  Graph gExample{createExampleGraph()};
+  testShortestPath(gExample, Node::S, Node::T);
+
+  Graph gWiki{createExampleGraph()};
+  testShortestPath(gWiki, Node::A, Node::E);
 
   return 0;
 }
