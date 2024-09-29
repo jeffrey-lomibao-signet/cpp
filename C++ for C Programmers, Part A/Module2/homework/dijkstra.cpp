@@ -5,13 +5,12 @@
 using namespace std;
 
 //=============================================================================
-enum class Node: int { S, A, B, C, D, E, F, G, T };
+enum class Node: int { A, B, C, D, E, F, G, S, T };
 constexpr int NUM_NODES = int(Node::T) + 1; 
 constexpr Node NO_NODE = Node(-1);
 
 ostream& operator<<(ostream& out, const Node& n) {
   switch(n) {
-  case Node::S: out << "S"; break;
   case Node::A: out << "A"; break;
   case Node::B: out << "B"; break;
   case Node::C: out << "C"; break;
@@ -19,6 +18,7 @@ ostream& operator<<(ostream& out, const Node& n) {
   case Node::E: out << "E"; break;
   case Node::F: out << "F"; break;
   case Node::G: out << "G"; break;
+  case Node::S: out << "S"; break;
   case Node::T: out << "T"; break;
   default: out << int(n);
   }
