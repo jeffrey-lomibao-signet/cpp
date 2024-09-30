@@ -596,12 +596,27 @@ Graph createWikipediaGraph() {
 // Place the edge in the graph if a random probability calculation is less than the density. 
 // Compute for a set of randomly generated graphs an average shortest path. 
 
+// Turn in:  Printout of program, 200 words on what you learned. 
+// Output showing the average path length calculation. 
+// Use densities: 20% and 40% on a graph of 50 nodes with a distance range of 1.0 to 10.0.
+// To get an average path length, compute the 49 paths:
+// 1 to 2, 1 to 3, 1 to 4, …, 1 to 50. 
+// [In an instance where there is no path between 1 and n, omit that value from the average.
+// This should be very rare for the chosen density and size in this homework.]
+
 Graph createRandomGraph(double density, Distance range) {
   constexpr size_t NUM_RANDOM_NODES = 50;
   Graph g(NUM_RANDOM_NODES);
 
-  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
+  // Choose random origin
+  // Choose random destination
+  // If origin == destination, discard and go back to 1
+  // If {origin,destination} pair already picked, discard and go back to 1
+  // If {origin,destination} pair is new, choose random cost for that edge and store
+
   cout << "Random Graph:" << endl << g;
+  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
+  cout << "Density = " << setprecision(3) << g.density() << endl;
   return g;
 }
 
