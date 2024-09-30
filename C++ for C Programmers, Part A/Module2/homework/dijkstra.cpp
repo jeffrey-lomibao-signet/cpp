@@ -374,9 +374,15 @@ class ShortestPath {
 
 public:
   ShortestPath(Graph& g): g{g} {};
-  vector<Vertex>& getVertices(); // vertices(List): list of vertices in G(V,E).
-  const Path& path(Node u, Node w); // path(u, w): find shortest path between u-w and returns the sequence of vertices representing shortest path u-v1-v2-…-vn-w.
-  Distance pathSize(Node u, Node w); // path_size(u, w): return the path cost associated with the shortest path.
+  // vertices(List): list of vertices in G(V,E).
+  vector<Vertex>& getVertices();
+  
+  // path(u, w): find shortest path between u-w and 
+  // returns the sequence of vertices representing shortest path u-v1-v2-…-vn-w.
+  const Path& path(Node u, Node w);
+
+  // path_size(u, w): return the path cost associated with the shortest path.
+  Distance pathSize(Node u, Node w);
 
 private:
   Graph& g;
@@ -388,11 +394,11 @@ private:
   void initShortestDistanceToNodesList();
   vector<Node> prev; // list of previous nodes with shortest distance to a node
   void initPreviousNodesList();
-  Path S; // list of nodes that is the shortest path
-  const Path& createShortestPathFromPrevNodesList();
+  Path shortestPath;
+  void updateMinDistanceAndPreviousNodesLists(Node u, Node v, Distance alt);
   void traverseNeighbors(Node u);
   Distance calcTotalDistanceToNeighbor(Node u, Node v);
-  void updateMinDistanceAndPreviousNodesLists(Node u, Node v, Distance alt);
+  const Path& createShortestPathFromPrevNodesList();
 };
 
 ostream& operator<<(ostream& out, const vector<Distance>& v) {
@@ -411,7 +417,6 @@ vector<Vertex>& ShortestPath::getVertices() {
 }
 
 void ShortestPath::initShortestPathSearch(Node u, Node w) {
-  // make sure graph is not empty
   numNodes = g.getNumVertices();
   assert(numNodes > 0);
   start = u;
@@ -439,22 +444,10 @@ void ShortestPath::initPreviousNodesList() {
   cout << "prev: " << prev << endl;
 }
 
-const Path& ShortestPath::createShortestPathFromPrevNodesList() {
-  S.clear(); // empty sequence
-  Node u{destination}; // u = target
-  if (prev[size_t(u)] != NO_NODE or u == start) { // if pre[u] is defined or u = source
-    while (u != NO_NODE) { // while u is defined
-      S.insert(S.begin(), u); // insert u at beginning of S
-      u = prev[size_t(u)]; // u = prev[u]
-    }
-  }
-  return S;
-}
-
 void ShortestPath::updateMinDistanceAndPreviousNodesLists(Node u, Node v, Distance alt) {
-  dist[size_t(v)] = alt; // dist[v] = alt
+  dist[size_t(v)] = alt;
   cout << "dist: " << dist << endl;
-  prev[size_t(v)] = u; // prev[v] = u
+  prev[size_t(v)] = u;
   cout << "prev: " << prev << endl;
 }
 
@@ -463,7 +456,7 @@ void ShortestPath::traverseNeighbors(Node u) {
   cout << "neighbors: " << neighbors << endl;
   for (auto v: neighbors) {
     Distance alt = calcTotalDistanceToNeighbor(u,v);
-    if (alt < dist[size_t(v)]) { // if alt < dist[v]
+    if (alt < dist[size_t(v)]) {
       updateMinDistanceAndPreviousNodesLists(u,v,alt);
       pq.changePriority(v, alt);
       cout << "pq: " << pq << endl;
@@ -472,11 +465,22 @@ void ShortestPath::traverseNeighbors(Node u) {
 }
 
 Distance ShortestPath::calcTotalDistanceToNeighbor(Node u, Node v) {
-  // alt = dist[u] + G.edges(u,v)
   Distance alt{dist[size_t(u)]};
   alt += g.getEdgeValue(u, v);
   cout << "alt: " << u << "," << v << "," << alt << endl;
   return alt;
+}
+
+const Path& ShortestPath::createShortestPathFromPrevNodesList() {
+  shortestPath.clear();
+  Node u{destination};
+  if (prev[size_t(u)] != NO_NODE or u == start) {
+    while (u != NO_NODE) {
+      shortestPath.insert(shortestPath.begin(), u);
+      u = prev[size_t(u)];
+    }
+  }
+  return shortestPath;
 }
 
 const Path& ShortestPath::path(Node u, Node w) {
@@ -496,15 +500,15 @@ const Path& ShortestPath::path(Node u, Node w) {
 }
 
 Distance ShortestPath::pathSize(Node u, Node w) {
-  Path& nodes{S};
+  Path& sp{shortestPath};
   if (u != start or w != destination) {
-    nodes = path(start, destination);
+    sp = path(start, destination);
   }
   Distance distance{0};
-  size_t numNodes{nodes.size()}, index{0};
+  size_t numNodes{sp.size()}, i{0};
   while (numNodes-- > 1) {
-    distance += g.getEdgeValue(nodes[index], nodes[index+1]);
-    ++index;
+    distance += g.getEdgeValue(sp[i], sp[i+1]);
+    ++i;
   }
   return distance;
 }
