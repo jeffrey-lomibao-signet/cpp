@@ -2,6 +2,7 @@
 #include <vector>
 #include <cassert>
 #include <string>
+#include <iomanip>
 
 using namespace std;
 
@@ -150,7 +151,10 @@ class Graph {
   friend ostream& operator<<(ostream& out, const Graph& g);
 
 public:
-  Graph(size_t numNodes);
+  Graph(size_t numNodes, string name="");
+  const string& getName() { return name; }
+  void displayInfo();
+
   // V() returns the number of vertices in the graph
   int getNumVertices() { return vertices.size(); }
 
@@ -199,6 +203,7 @@ private:
   // Another approach could be to use (x, y) to index a cost stored in an associated array or map.
   vector<Vertex> vertices; // use adjacency list to represent the graph
   vector<Distance> nodeValues;
+  string name;
 };
 
 ostream& operator<<(ostream& out, const Graph& g) {
@@ -212,7 +217,13 @@ ostream& operator<<(ostream& out, const Graph& g) {
   return out;
 }
 
-Graph::Graph(size_t numNodes) {
+void Graph::displayInfo() {
+  cout << getName() << " Graph:" << endl << this;
+  cout << "Vertices = " << getNumVertices() << "; Edges = " << getNumEdges() << endl;
+  cout << "Density = " << setprecision(3) << density() << endl;
+}
+
+Graph::Graph(size_t numNodes, string name):name{name} {
   for (size_t i{0}; i < numNodes; ++i) {
     vertices.push_back(Vertex());
     nodeValues.push_back(MAX_DISTANCE);
@@ -528,10 +539,9 @@ Distance ShortestPath::pathSize(Node u, Node w) {
 }
 
 //=============================================================================
-#include <iomanip>
 Graph createExampleGraph() {
   constexpr int NUM_NODES = int(Node::I) + 1; 
-  Graph g(NUM_NODES);
+  Graph g(NUM_NODES, "Example");
 
   g.addEdge(Node::H, Node::A, 4);
   g.addEdge(Node::H, Node::B, 3);
@@ -559,17 +569,14 @@ Graph createExampleGraph() {
   g.addEdge(Node::H, Node::I, 20);
   g.deleteEdge(Node::H, Node::I);
 
-  cout << "Example Graph:" << endl << g;
-  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
-  cout << "Density = " << setprecision(3) << g.density() << endl;
-
+  g.displayInfo();
   return g;
 }
 
 //=============================================================================
 Graph createWikipediaGraph() {
   constexpr int NUM_NODES = int(Node::F) + 1; 
-  Graph g(NUM_NODES);
+  Graph g(NUM_NODES, "Wikipedia");
 
   g.addEdge(Node::A, Node::B, 7);
   g.addEdge(Node::A, Node::C, 9);
@@ -585,9 +592,7 @@ Graph createWikipediaGraph() {
   g.addEdge(Node::E, Node::F, 9);
   g.addEdge(Node::F, Node::E, 9);
 
-  cout << "Wikipedia Graph:" << endl << g;
-  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
-  cout << "Density = " << setprecision(3) << g.density() << endl;
+  g.displayInfo();
   return g;
 }
 
@@ -616,7 +621,7 @@ Graph createWikipediaGraph() {
 
 Graph createRandomGraph(double density, Distance min, Distance max) {
   constexpr size_t NUM_RANDOM_NODES = 50;
-  Graph g(NUM_RANDOM_NODES);
+  Graph g(NUM_RANDOM_NODES, "Random");
 
   // Choose random origin
   // Choose random destination
@@ -624,9 +629,7 @@ Graph createRandomGraph(double density, Distance min, Distance max) {
   // If {origin,destination} pair already picked, discard and go back to 1
   // If {origin,destination} pair is new, choose random cost for that edge and store
 
-  cout << "Random Graph:" << endl << g;
-  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
-  cout << "Density = " << setprecision(3) << g.density() << endl;
+  g.displayInfo();
   return g;
 }
 
