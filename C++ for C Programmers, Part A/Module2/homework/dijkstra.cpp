@@ -173,6 +173,12 @@ public:
   // set_edge_value (G, x, y, v): sets the value associated to the edge (x,y) to v.
   void setEdgeValue(Node nodeX, Node nodeY, Distance distance);
 
+  double density() {
+    size_t numVertices = getNumVertices();
+    size_t numEdges = getNumEdges();
+    return 2.0 * numEdges / (numVertices * (numVertices - 1)); 
+  }
+
 private:
   // One important consideration for the Graph class is how to represent the graph as a member ADT. 
   // Two basic implementations are generally considered: adjacency list and adjacency matrix
@@ -514,6 +520,7 @@ Distance ShortestPath::pathSize(Node u, Node w) {
 }
 
 //=============================================================================
+#include <iomanip>
 Graph createExampleGraph() {
   Graph g(NUM_NODES);
 
@@ -543,8 +550,9 @@ Graph createExampleGraph() {
   g.addEdge(Node::S, Node::T, 20);
   g.deleteEdge(Node::S, Node::T);
 
-  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
   cout << "Example Graph:" << endl << g;
+  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
+  cout << "Density = " << setprecision(3) << g.density() << endl;
 
   return g;
 }
@@ -567,8 +575,9 @@ Graph createWikipediaGraph() {
   g.addEdge(Node::E, Node::F, 9);
   g.addEdge(Node::F, Node::E, 9);
 
-  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
   cout << "Wikipedia Graph:" << endl << g;
+  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
+  cout << "Density = " << setprecision(3) << g.density() << endl;
   return g;
 }
 
