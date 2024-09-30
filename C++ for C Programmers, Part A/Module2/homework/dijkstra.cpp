@@ -49,17 +49,18 @@ ostream& operator<<(ostream& out, const vector<Node>& nodes) {
 
 //=============================================================================
 using Distance = size_t;
-constexpr Distance MAX_DISTANCE = SIZE_MAX;
+constexpr Distance MAX_EDGE_DISTANCE = 100;
+constexpr Distance MAX_DISTANCE = NUM_NODES * MAX_EDGE_DISTANCE;
 class Edge {
   friend class Vertex;
   friend ostream& operator<<(ostream& out, const Edge& e);
 
 public:
-  Edge(Node n, Distance d): node{n}, distance{d} {}
+  Edge(Node n, Distance d): node{n} { setDistance(d); }
   Node getNode() { return node; }
   Distance getDistance() { return distance; }
   void setNode(Node n) { node = n; }
-  void setDistance(Distance d) { distance = d; }
+  void setDistance(Distance d) { distance = (d > MAX_EDGE_DISTANCE) ? MAX_EDGE_DISTANCE:d; }
   void setEdge(Node n, Distance d) { setNode(n); setDistance(d); }
   Edge getEdge() { return Edge(node, distance); }
 
@@ -261,6 +262,106 @@ void Graph::setEdgeValue(Node nodeX, Node nodeY, Distance distance) {
 }
 
 //=============================================================================
+class PriorityQueueElement {
+  friend class PriorityQueue;
+
+public: 
+  PriorityQueueElement(Node n, Distance d): node{n}, d{d} {}
+  Node getNode() { return node; }
+  Distance getDistance() { return d; }
+  
+  bool operator<(const PriorityQueueElement& other) const { return d < other.d; }
+
+private:
+  Node node;
+  Distance d;
+};
+
+//=============================================================================
+#include <algorithm>
+class PriorityQueue {
+  friend ostream& operator<<(ostream& out, const PriorityQueue& pq);
+
+public:
+  PriorityQueue() {}
+  void add(Node n, Distance d);
+  void initialize(size_t numNodes, Node start);
+  bool isEmpty() { return q.size() == 0; };
+  
+  // chgPrioirity(PQ, priority): changes the priority (node value) of queue element.
+  void changePriority(Node n, Distance d);
+
+  // minPrioirty(PQ): removes the top element of the queue.
+  Node minPriority();
+
+  // contains(PQ, queue_element): does the queue contain queue_element.
+  bool contains(PriorityQueueElement qe);
+
+  // Insert(PQ, queue_element): insert queue_element into queue
+  void insert(PriorityQueueElement qe);
+
+  // top(PQ):returns the top element of the queue.
+  // size(PQ): return the number of queue_elements.
+private:
+  vector<PriorityQueueElement> q;
+};
+
+ostream& operator<<(ostream& out, const PriorityQueue& pq) {
+  cout << "[ ";
+  for (auto qe: pq.q) {
+    cout << "(" << qe.getNode() << ":" << qe.getDistance() << ") ";
+  }
+  cout << "]";
+  return out;
+}
+
+void PriorityQueue::add(Node n, Distance d) {
+  q.push_back(PriorityQueueElement(n,d));
+}
+
+void PriorityQueue::initialize(size_t numNodes, Node start) {
+  q.clear();
+  add(start, 0);
+  for (size_t i{0}; i < numNodes; ++i) {
+    if (i != size_t(start)) {
+      add(Node(i), MAX_DISTANCE);
+    }
+  }
+}
+
+Node PriorityQueue::minPriority() {
+  if (isEmpty()) {
+    return NO_NODE;
+  }
+  Node n{q[0].getNode()};
+  q.erase(q.begin());
+  return n;
+}
+
+void PriorityQueue::changePriority(Node n, Distance d) {
+  for (auto& x: q) {
+    if (x.node == n) {
+      x.d = d;
+      break;
+    }
+  }
+  sort(q.begin(), q.end());
+}
+
+bool PriorityQueue::contains(PriorityQueueElement qe) {
+  for (auto x: q) {
+    if (x.node == qe.node)
+      return true;
+  }
+  return false;
+}
+
+void PriorityQueue::insert(PriorityQueueElement qe) {
+  if(!contains(qe))
+    q.insert(q.begin(), qe); 
+}
+
+//=============================================================================
 using Path = vector<Node>;
 class ShortestPath {
   friend ostream& operator<<(ostream& out, const vector<Distance>& v);
@@ -273,6 +374,7 @@ public:
 
 private:
   Graph& g;
+  PriorityQueue pq;
   void initShortestPathSearch(Node u, Node w);
   Node start, destination;
   size_t numNodes;
@@ -314,6 +416,8 @@ void ShortestPath::initShortestPathSearch(Node u, Node w) {
   assert(numNodes > 0);
   start = u;
   destination = w;
+  pq.initialize(numNodes, start);
+  cout << "pq: " << pq << endl;
   initOpenNodesList();
   initShortestDistanceToNodesList();
   initPreviousNodesList();
@@ -428,6 +532,7 @@ const Path& ShortestPath::path(Node u, Node w) {
   // Use Dijkstra's algorithm as described here:
   // "https://en.wikipedia.org/wiki/Dijkstra's_algorithm"
   initShortestPathSearch(u,w);
+#if 0
   while(hasOpenNode()) {
     cout << "===============" << endl;
     Node u{findOpenNodeWithMinDistance()};
@@ -437,6 +542,26 @@ const Path& ShortestPath::path(Node u, Node w) {
     traverseNeighbors(u);
   }
   cout << "===============" << endl;
+#else
+  while(!pq.isEmpty()) {
+    cout << "===============" << endl;
+    Node u{pq.minPriority()};
+    cout << "pq: " << pq << endl;
+    if (u == destination or u == NO_NODE)
+      break;
+    for (auto v: g.neighbors(u)) {
+      size_t alt = dist[size_t(u)] + g.getEdgeValue(u,v);
+      cout << "alt: " << u << "," << v << "," << alt << endl;
+      if (alt < dist[size_t(v)]) {
+        prev[size_t(v)] = u;
+        dist[size_t(v)] = alt;
+        pq.changePriority(v, alt);
+        cout << "pq: " << pq << endl;
+      }
+    }
+  }
+  cout << "===============" << endl;
+#endif
   return createShortestPathFromPrevNodesList();
 }
 
