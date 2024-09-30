@@ -10,6 +10,7 @@ constexpr int NUM_NODES = int(Node::T) + 1;
 constexpr Node NO_NODE = Node(-1);
 
 ostream& operator<<(ostream& out, const Node& n) {
+#ifdef DISPLAY_NODE_AS_ENUM
   switch(n) {
   case Node::A: out << "A"; break;
   case Node::B: out << "B"; break;
@@ -22,16 +23,19 @@ ostream& operator<<(ostream& out, const Node& n) {
   case Node::T: out << "T"; break;
   default: out << int(n);
   }
+#else
+  out << int(n);
+#endif
   return out;
 }
 
 Node operator++(Node& n) { 
-  n = static_cast<Node>((static_cast<int>(n) + 1) % NUM_NODES);
+  n = static_cast<Node>((static_cast<int>(n) + 1));
   return n; 
 }
 Node operator++(Node& n, int) {
   Node temp = n;
-  n = Node((int(n) + 1) % NUM_NODES);
+  n = Node(int(n) + 1);
   return temp;
 }
 
