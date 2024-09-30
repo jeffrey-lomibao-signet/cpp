@@ -1,31 +1,35 @@
 #include <iostream>
 #include <vector>
 #include <cassert>
+#include <string>
 
 using namespace std;
 
 //=============================================================================
-enum class Node: int { A, B, C, D, E, F, G, S, T };
-constexpr int NUM_NODES = int(Node::T) + 1; 
+enum class Node: int { 
+  A, B, C, D, E, F, G, H, I, J,
+  A1, B1, C1, D1, E1, F1, G1, H1, I1, J1,
+  A2, B2, C2, D2, E2, F2, G2, H2, I2, J2,
+  A3, B3, C3, D3, E3, F3, G3, H3, I3, J3,
+  A4, B4, C4, D4, E4, F4, G4, H4, I4, J4,
+};
 constexpr Node NO_NODE = Node(-1);
+vector<string> nodeDescriptors{
+  "A","B","C","D","E","F","G","H","I","J",
+  "A1","B1","C1","D1","E1","F1","G1","H1","I1","J1",
+  "A2","B2","C2","D2","E2","F2","G2","H2","I2","J2",
+  "A3","B3","C3","D3","E3","F3","G3","H3","I3","J3",
+  "A4","B4","C4","D4","E4","F4","G4","H4","I4","J4",
+};
 
 ostream& operator<<(ostream& out, const Node& n) {
-#ifdef DISPLAY_NODE_AS_ENUM
-  switch(n) {
-  case Node::A: out << "A"; break;
-  case Node::B: out << "B"; break;
-  case Node::C: out << "C"; break;
-  case Node::D: out << "D"; break;
-  case Node::E: out << "E"; break;
-  case Node::F: out << "F"; break;
-  case Node::G: out << "G"; break;
-  case Node::S: out << "S"; break;
-  case Node::T: out << "T"; break;
-  default: out << int(n);
+  int i = int(n);
+  if (i >= 0 or size_t(i) < nodeDescriptors.size()) {
+    out << nodeDescriptors[i];
   }
-#else
-  out << int(n);
-#endif
+  else {
+    out << i;
+  }
   return out;
 }
 
@@ -52,9 +56,9 @@ ostream& operator<<(ostream& out, const vector<Node>& nodes) {
 }
 
 //=============================================================================
+#include<limits>
 using Distance = double;
-constexpr Distance MAX_EDGE_DISTANCE = 100;
-constexpr Distance MAX_DISTANCE = NUM_NODES * MAX_EDGE_DISTANCE;
+constexpr Distance MAX_DISTANCE = numeric_limits<Distance>::max();
 class Edge {
   friend class Vertex;
   friend ostream& operator<<(ostream& out, const Edge& e);
@@ -64,7 +68,7 @@ public:
   Node getNode() { return node; }
   Distance getDistance() { return distance; }
   void setNode(Node n) { node = n; }
-  void setDistance(Distance d) { distance = (d > MAX_EDGE_DISTANCE) ? MAX_EDGE_DISTANCE:d; }
+  void setDistance(Distance d) { distance = d; }
   void setEdge(Node n, Distance d) { setNode(n); setDistance(d); }
   Edge getEdge() { return Edge(node, distance); }
 
@@ -526,33 +530,34 @@ Distance ShortestPath::pathSize(Node u, Node w) {
 //=============================================================================
 #include <iomanip>
 Graph createExampleGraph() {
+  constexpr int NUM_NODES = int(Node::I) + 1; 
   Graph g(NUM_NODES);
 
-  g.addEdge(Node::S, Node::A, 4);
-  g.addEdge(Node::S, Node::B, 3);
-  g.addEdge(Node::S, Node::D, 7);
+  g.addEdge(Node::H, Node::A, 4);
+  g.addEdge(Node::H, Node::B, 3);
+  g.addEdge(Node::H, Node::D, 7);
 
   g.addEdge(Node::A, Node::C, 1);
 
   g.addEdge(Node::B, Node::D, 4);
-  g.addEdge(Node::B, Node::S, 3);
+  g.addEdge(Node::B, Node::H, 3);
 
   g.addEdge(Node::C, Node::D, 3);
   g.addEdge(Node::C, Node::E, 1);
 
   g.addEdge(Node::D, Node::F, 5);
-  g.addEdge(Node::D, Node::T, 3);
+  g.addEdge(Node::D, Node::I, 3);
 
   g.addEdge(Node::E, Node::G, 2);
-  g.addEdge(Node::E, Node::T, 4);
+  g.addEdge(Node::E, Node::I, 4);
 
-  g.addEdge(Node::G, Node::T, 3);
+  g.addEdge(Node::G, Node::I, 3);
   g.addEdge(Node::G, Node::E, 2);
 
-  g.addEdge(Node::T, Node::F, 5);
+  g.addEdge(Node::I, Node::F, 5);
 
-  g.addEdge(Node::S, Node::T, 20);
-  g.deleteEdge(Node::S, Node::T);
+  g.addEdge(Node::H, Node::I, 20);
+  g.deleteEdge(Node::H, Node::I);
 
   cout << "Example Graph:" << endl << g;
   cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
@@ -563,6 +568,7 @@ Graph createExampleGraph() {
 
 //=============================================================================
 Graph createWikipediaGraph() {
+  constexpr int NUM_NODES = int(Node::F) + 1; 
   Graph g(NUM_NODES);
 
   g.addEdge(Node::A, Node::B, 7);
@@ -608,7 +614,7 @@ Graph createWikipediaGraph() {
 // [In an instance where there is no path between 1 and n, omit that value from the average.
 // This should be very rare for the chosen density and size in this homework.]
 
-Graph createRandomGraph(double density, Distance range) {
+Graph createRandomGraph(double density, Distance min, Distance max) {
   constexpr size_t NUM_RANDOM_NODES = 50;
   Graph g(NUM_RANDOM_NODES);
 
@@ -641,8 +647,8 @@ int main() {
   Distance distance;
 
   Graph gExample{createExampleGraph()};
-  tie(path, distance) = testShortestPath(gExample, Node::S, Node::T);
-  const Path EXAMPLE_PATH = {Node::S,Node::A,Node::C,Node::E,Node::T};
+  tie(path, distance) = testShortestPath(gExample, Node::H, Node::I);
+  const Path EXAMPLE_PATH = {Node::H,Node::A,Node::C,Node::E,Node::I};
   assert(path == EXAMPLE_PATH and distance == 10);
 
   Graph gWiki{createWikipediaGraph()};
