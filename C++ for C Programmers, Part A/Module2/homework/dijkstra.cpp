@@ -384,18 +384,12 @@ private:
   void initShortestPathSearch(Node u, Node w);
   Node start, destination;
   size_t numNodes;
-  vector<Node> openNodes;
-  void initOpenNodesList();
-  bool hasOpenNode();
-  bool isNodeOpen(Node n);
-  void closeNode(Node u);
   vector<Distance>dist; // list of shortest distances to nodes
   void initShortestDistanceToNodesList();
   vector<Node> prev; // list of previous nodes with shortest distance to a node
   void initPreviousNodesList();
   Path S; // list of nodes that is the shortest path
   const Path& createShortestPathFromPrevNodesList();
-  Node findOpenNodeWithMinDistance();
   void traverseNeighbors(Node u);
   Distance calcTotalDistanceToNeighbor(Node u, Node v);
   void updateMinDistanceAndPreviousNodesLists(Node u, Node v, Distance alt);
@@ -424,42 +418,8 @@ void ShortestPath::initShortestPathSearch(Node u, Node w) {
   destination = w;
   pq.initialize(numNodes, start);
   cout << "pq: " << pq << endl;
-  initOpenNodesList();
   initShortestDistanceToNodesList();
   initPreviousNodesList();
-}
-
-void ShortestPath::initOpenNodesList() {
-  openNodes.clear();
-  for (size_t i{0}; i < numNodes; ++i) {
-    openNodes.push_back(Node(i));
-  }
-  cout << "Q: " << openNodes << endl;
-}
-
-bool ShortestPath::hasOpenNode() {
-  return (openNodes.size() > 0);
-}
-
-bool ShortestPath::isNodeOpen(Node n) {
-  bool found{false};
-  for (Node node: openNodes) {
-    if (node == n) {
-      found = true;
-      break;
-    }
-  }
-  return found;
-}
-
-void ShortestPath::closeNode(Node u) {
-  for (auto i{openNodes.begin()}; i < openNodes.end(); ++i) {
-    if (*i == u) {
-      openNodes.erase(i);
-      break;
-    }
-  }
-  cout << "Q: " << openNodes << endl;
 }
 
 void ShortestPath::initShortestDistanceToNodesList() {
@@ -491,37 +451,22 @@ const Path& ShortestPath::createShortestPathFromPrevNodesList() {
   return S;
 }
 
-Node ShortestPath::findOpenNodeWithMinDistance() {
-  Distance min = MAX_DISTANCE;
-  Node u{NO_NODE};
-  for (auto i{openNodes.begin()}; i < openNodes.end(); ++i) {
-    Node n = *i;
-    if(dist[size_t(n)] < min) {
-      min = dist[size_t(n)];
-      u = n;
-    }
-  }
-  cout << "u: " << u << endl;
-  return u;
-}
-
 void ShortestPath::updateMinDistanceAndPreviousNodesLists(Node u, Node v, Distance alt) {
-  if (alt < dist[size_t(v)]) { // if alt < dist[v]
-    dist[size_t(v)] = alt; // dist[v] = alt
-    cout << "dist: " << dist << endl;
-    prev[size_t(v)] = u; // prev[v] = u
-    cout << "prev: " << prev << endl;
-  }
+  dist[size_t(v)] = alt; // dist[v] = alt
+  cout << "dist: " << dist << endl;
+  prev[size_t(v)] = u; // prev[v] = u
+  cout << "prev: " << prev << endl;
 }
 
 void ShortestPath::traverseNeighbors(Node u) {
-  // for each neighbor v of u still in Q
   vector<Node> neighbors = g.neighbors(u);
   cout << "neighbors: " << neighbors << endl;
   for (auto v: neighbors) {
-    if (isNodeOpen(v)) {
-      Distance alt = calcTotalDistanceToNeighbor(u,v);
+    Distance alt = calcTotalDistanceToNeighbor(u,v);
+    if (alt < dist[size_t(v)]) { // if alt < dist[v]
       updateMinDistanceAndPreviousNodesLists(u,v,alt);
+      pq.changePriority(v, alt);
+      cout << "pq: " << pq << endl;
     }
   }
 }
@@ -538,36 +483,15 @@ const Path& ShortestPath::path(Node u, Node w) {
   // Use Dijkstra's algorithm as described here:
   // "https://en.wikipedia.org/wiki/Dijkstra's_algorithm"
   initShortestPathSearch(u,w);
-#if 0
-  while(hasOpenNode()) {
-    cout << "===============" << endl;
-    Node u{findOpenNodeWithMinDistance()};
-    if (u == destination or u == NO_NODE)
-      break;
-    closeNode(u);
-    traverseNeighbors(u);
-  }
-  cout << "===============" << endl;
-#else
   while(!pq.isEmpty()) {
     cout << "===============" << endl;
     Node u{pq.minPriority()};
     cout << "pq: " << pq << endl;
     if (u == destination or u == NO_NODE)
       break;
-    for (auto v: g.neighbors(u)) {
-      size_t alt = dist[size_t(u)] + g.getEdgeValue(u,v);
-      cout << "alt: " << u << "," << v << "," << alt << endl;
-      if (alt < dist[size_t(v)]) {
-        prev[size_t(v)] = u;
-        dist[size_t(v)] = alt;
-        pq.changePriority(v, alt);
-        cout << "pq: " << pq << endl;
-      }
-    }
+    traverseNeighbors(u);
   }
   cout << "===============" << endl;
-#endif
   return createShortestPathFromPrevNodesList();
 }
 
