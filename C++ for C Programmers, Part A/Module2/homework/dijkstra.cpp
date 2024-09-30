@@ -52,7 +52,7 @@ ostream& operator<<(ostream& out, const vector<Node>& nodes) {
 }
 
 //=============================================================================
-using Distance = size_t;
+using Distance = double;
 constexpr Distance MAX_EDGE_DISTANCE = 100;
 constexpr Distance MAX_DISTANCE = NUM_NODES * MAX_EDGE_DISTANCE;
 class Edge {
