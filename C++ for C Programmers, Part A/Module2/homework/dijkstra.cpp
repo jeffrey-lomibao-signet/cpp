@@ -284,9 +284,11 @@ class PriorityQueue {
 
 public:
   PriorityQueue() {}
-  void add(Node n, Distance d);
+  // create list with starting node at the top
   void initialize(size_t numNodes, Node start);
-  bool isEmpty() { return q.size() == 0; };
+
+  void add(Node n, Distance d);
+  bool isEmpty() { return size() == 0; };
   
   // chgPrioirity(PQ, priority): changes the priority (node value) of queue element.
   void changePriority(Node n, Distance d);
@@ -301,7 +303,11 @@ public:
   void insert(PriorityQueueElement qe);
 
   // top(PQ):returns the top element of the queue.
+  PriorityQueueElement top() { return q.at(0); }
+
   // size(PQ): return the number of queue_elements.
+  size_t size() { return q.size(); }
+
 private:
   vector<PriorityQueueElement> q;
 };
@@ -315,10 +321,6 @@ ostream& operator<<(ostream& out, const PriorityQueue& pq) {
   return out;
 }
 
-void PriorityQueue::add(Node n, Distance d) {
-  q.push_back(PriorityQueueElement(n,d));
-}
-
 void PriorityQueue::initialize(size_t numNodes, Node start) {
   q.clear();
   add(start, 0);
@@ -327,6 +329,10 @@ void PriorityQueue::initialize(size_t numNodes, Node start) {
       add(Node(i), MAX_DISTANCE);
     }
   }
+}
+
+void PriorityQueue::add(Node n, Distance d) {
+  q.push_back(PriorityQueueElement(n,d));
 }
 
 Node PriorityQueue::minPriority() {
