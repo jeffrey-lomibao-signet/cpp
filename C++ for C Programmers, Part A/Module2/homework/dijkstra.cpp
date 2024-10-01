@@ -152,14 +152,14 @@ class Graph {
 
 public:
   Graph(size_t numNodes, string name="");
-  const string& getName() { return name; }
-  void displayInfo();
+  const string& getName() const { return name; }
+  double density() const;
 
   // V() returns the number of vertices in the graph
-  int getNumVertices() { return vertices.size(); }
+  int getNumVertices() const { return vertices.size(); }
 
   // E() returns the number of edges in the graph
-  int getNumEdges();
+  int getNumEdges() const;
 
   // adjacent (G, x, y): tests whether there is an edge from node x to node y.
   bool adjacent(Node nodeX, Node nodeY);
@@ -185,12 +185,6 @@ public:
   // set_edge_value (G, x, y, v): sets the value associated to the edge (x,y) to v.
   void setEdgeValue(Node nodeX, Node nodeY, Distance distance);
 
-  double density() {
-    size_t numVertices = getNumVertices();
-    size_t numEdges = getNumEdges();
-    return 2.0 * numEdges / (numVertices * (numVertices - 1)); 
-  }
-
 private:
   // One important consideration for the Graph class is how to represent the graph as a member ADT. 
   // Two basic implementations are generally considered: adjacency list and adjacency matrix
@@ -206,9 +200,9 @@ private:
   string name;
 };
 
-ostream& operator<<(ostream& out, const Graph& g) {
+ostream& operator<<(ostream& out, const vector<Vertex>& vertices) {
   Node node{Node(0)};
-  for (auto v: g.vertices) {
+  for (auto v: vertices) {
     cout << node << ":";
     cout << v;
     cout << endl;
@@ -217,10 +211,18 @@ ostream& operator<<(ostream& out, const Graph& g) {
   return out;
 }
 
-void Graph::displayInfo() {
-  cout << getName() << " Graph:" << endl << this;
-  cout << "Vertices = " << getNumVertices() << "; Edges = " << getNumEdges() << endl;
-  cout << "Density = " << setprecision(3) << density() << endl;
+ostream& operator<<(ostream& out, const Graph& g) {
+  cout << g.getName() << " Graph:" << endl;
+  cout << g.vertices;
+  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
+  cout << "Density = " << setprecision(3) << g.density() << endl;
+  return out;
+}
+
+double Graph::density() const {
+  size_t numVertices = getNumVertices();
+  size_t numEdges = getNumEdges();
+  return 2.0 * numEdges / (numVertices * (numVertices - 1)); 
 }
 
 Graph::Graph(size_t numNodes, string name):name{name} {
@@ -230,7 +232,7 @@ Graph::Graph(size_t numNodes, string name):name{name} {
   }
 }
 
-int Graph::getNumEdges() {
+int Graph::getNumEdges() const {
   int numEdges{0};
   for(Vertex v: vertices) {
     numEdges += v.getNumEdges();
@@ -239,9 +241,7 @@ int Graph::getNumEdges() {
 }
 
 bool Graph::adjacent(Node nodeX, Node nodeY) {
-  bool edgeFound{false};
-  edgeFound = vertices.at(size_t(nodeX)).isNodePresent(nodeY);
-  return edgeFound;
+  return vertices.at(size_t(nodeX)).isNodePresent(nodeY);
 }
 
 vector<Node> Graph::neighbors(Node nodeX) {
@@ -254,8 +254,10 @@ vector<Node> Graph::neighbors(Node nodeX) {
 }
 
 void Graph::addEdge(Node nodeX, Node nodeY, Distance distance) {
-  if (!adjacent(nodeX, nodeY)) {
-    vertices.at(size_t(nodeX)).addEdge(Edge(nodeY, distance));
+  if (nodeX != nodeY) {
+    if (!adjacent(nodeX, nodeY)) {
+      vertices.at(size_t(nodeX)).addEdge(Edge(nodeY, distance));
+    }
   }
 }
 
@@ -569,7 +571,7 @@ Graph createExampleGraph() {
   g.addEdge(Node::H, Node::I, 20);
   g.deleteEdge(Node::H, Node::I);
 
-  g.displayInfo();
+  cout << g << endl;
   return g;
 }
 
@@ -592,44 +594,25 @@ Graph createWikipediaGraph() {
   g.addEdge(Node::E, Node::F, 9);
   g.addEdge(Node::F, Node::E, 9);
 
-  g.displayInfo();
+  cout << g << endl;
   return g;
 }
 
 //=============================================================================
-
-// Basic problem:  
-// Write a set of constructors for declaring and initializing a graph. 
-// An edge will have a positive cost that is its distance. 
-// Have a procedure that produces a randomly generated set of edges with positive distances.  
-// Assume the graphs are undirected. 
-// The random graph procedure should have edge density as a parameter,
-// and the distance range as a parameter. 
-// So a graph whose density is 0.1 would have 10% of its edges picked at random.
-// Its edge distance would be selected at random from the distance range. 
-// The procedure should run through all possible undirected edges, say (i,j). 
-// Place the edge in the graph if a random probability calculation is less than the density. 
-// Compute for a set of randomly generated graphs an average shortest path. 
-
-// Turn in:  Printout of program, 200 words on what you learned. 
-// Output showing the average path length calculation. 
-// Use densities: 20% and 40% on a graph of 50 nodes with a distance range of 1.0 to 10.0.
-// To get an average path length, compute the 49 paths:
-// 1 to 2, 1 to 3, 1 to 4, …, 1 to 50. 
-// [In an instance where there is no path between 1 and n, omit that value from the average.
-// This should be very rare for the chosen density and size in this homework.]
-
+#include <random>
+#include <ctime>
 Graph createRandomGraph(double density, Distance min, Distance max) {
   constexpr size_t NUM_RANDOM_NODES = 50;
   Graph g(NUM_RANDOM_NODES, "Random");
 
-  // Choose random origin
-  // Choose random destination
-  // If origin == destination, discard and go back to 1
-  // If {origin,destination} pair already picked, discard and go back to 1
-  // If {origin,destination} pair is new, choose random cost for that edge and store
+  default_random_engine e(time(0));
+  std::uniform_real_distribution<Distance> randomDistance(min, max);
+  uniform_int_distribution<int> randomNode(0,NUM_RANDOM_NODES-1);
 
-  g.displayInfo();
+  while (g.density() < density) {
+    g.addEdge(Node(randomNode(e)), Node(randomNode(e)), randomDistance(e));
+  }
+  cout << g << endl;
   return g;
 }
 
@@ -659,5 +642,7 @@ int main() {
   const Path WIKI_PATH = {Node::A,Node::C,Node::F,Node::E};
   assert(path == WIKI_PATH and distance == 20);
 
+  Graph gRandom{createRandomGraph(0.2, 1.0, 10.0)};
+  
   return 0;
 }
