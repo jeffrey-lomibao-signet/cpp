@@ -212,6 +212,7 @@ ostream& operator<<(ostream& out, const vector<Vertex>& vertices) {
 }
 
 ostream& operator<<(ostream& out, const Graph& g) {
+  cout << "================================================" << endl;
   cout << g.getName() << " Graph:" << endl;
   cout << g.vertices;
   cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
@@ -334,18 +335,23 @@ public:
   PriorityQueueElement top() { return q.at(0); }
 
   // size(PQ): return the number of queue_elements.
-  size_t size() { return q.size(); }
+  size_t size() const { return q.size(); }
 
 private:
   vector<PriorityQueueElement> q;
 };
 
-ostream& operator<<(ostream& out, const PriorityQueue& pq) {
-  cout << "[ ";
-  for (auto qe: pq.q) {
+ostream& operator<<(ostream& out, const vector<PriorityQueueElement>& pq) {
+  cout << pq.size() << " [ ";
+  for (auto qe: pq) {
     cout << "(" << qe.getNode() << ":" << qe.getDistance() << ") ";
   }
   cout << "]";
+  return out;
+}
+
+ostream& operator<<(ostream& out, const PriorityQueue& pq) {
+  cout << pq.q;
   return out;
 }
 
@@ -369,6 +375,9 @@ Node PriorityQueue::minPriority() {
   }
   Node n{q[0].getNode()};
   q.erase(q.begin());
+#ifdef ENABLE_DEBUG
+  cout << "q: " << q << endl;
+#endif
   return n;
 }
 
@@ -450,7 +459,9 @@ void ShortestPath::initShortestPathSearch(Node u, Node w) {
   start = u;
   destination = w;
   pq.initialize(numNodes, start);
+#ifdef ENABLE_DEBUG
   cout << "pq: " << pq << endl;
+#endif
   initShortestDistanceToNodesList();
   initPreviousNodesList();
 }
@@ -461,7 +472,9 @@ void ShortestPath::initShortestDistanceToNodesList() {
     dist.push_back(MAX_DISTANCE);
   }
   dist.at(size_t(start)) = 0;
+#ifdef ENABLE_DEBUG
   cout << "dist: " << dist << endl;
+#endif
 }
 
 void ShortestPath::initPreviousNodesList() {
@@ -469,25 +482,33 @@ void ShortestPath::initPreviousNodesList() {
   for (size_t i{0}; i < numNodes; ++i) {
     prev.push_back(NO_NODE);
   }
+#ifdef ENABLE_DEBUG
   cout << "prev: " << prev << endl;
+#endif
 }
 
 void ShortestPath::updateMinDistanceAndPreviousNodesLists(Node u, Node v, Distance alt) {
   dist[size_t(v)] = alt;
-  cout << "dist: " << dist << endl;
   prev[size_t(v)] = u;
+#ifdef ENABLE_DEBUG
+  cout << "dist: " << dist << endl;
   cout << "prev: " << prev << endl;
+#endif
 }
 
 void ShortestPath::traverseNeighbors(Node u) {
   vector<Node> neighbors = g.neighbors(u);
+#ifdef ENABLE_DEBUG
   cout << "neighbors: " << neighbors << endl;
+#endif  
   for (auto v: neighbors) {
     Distance alt = calcTotalDistanceToNeighbor(u,v);
     if (alt < dist[size_t(v)]) {
       updateMinDistanceAndPreviousNodesLists(u,v,alt);
       pq.changePriority(v, alt);
+#ifdef ENABLE_DEBUG
       cout << "pq: " << pq << endl;
+#endif
     }
   }
 }
@@ -495,7 +516,9 @@ void ShortestPath::traverseNeighbors(Node u) {
 Distance ShortestPath::calcTotalDistanceToNeighbor(Node u, Node v) {
   Distance alt{dist[size_t(u)]};
   alt += g.getEdgeValue(u, v);
+#ifdef ENABLE_DEBUG
   cout << "alt: " << u << "," << v << "," << alt << endl;
+#endif
   return alt;
 }
 
@@ -516,14 +539,17 @@ const Path& ShortestPath::path(Node u, Node w) {
   // "https://en.wikipedia.org/wiki/Dijkstra's_algorithm"
   initShortestPathSearch(u,w);
   while(!pq.isEmpty()) {
+#ifdef ENABLE_DEBUG
     cout << "===============" << endl;
+#endif
     Node x{pq.minPriority()};
-    cout << "pq: " << pq << endl;
     if (x == destination or x == NO_NODE)
       break;
     traverseNeighbors(x);
   }
+#ifdef ENABLE_DEBUG
   cout << "===============" << endl;
+#endif
   return createShortestPathFromPrevNodesList();
 }
 
@@ -572,7 +598,7 @@ Graph createExampleGraph() {
   g.addEdge(Node::H, Node::I, 20);
   g.deleteEdge(Node::H, Node::I);
 
-  cout << g << endl;
+  cout << g;
   return g;
 }
 
@@ -595,7 +621,7 @@ Graph createWikipediaGraph() {
   g.addEdge(Node::E, Node::F, 9);
   g.addEdge(Node::F, Node::E, 9);
 
-  cout << g << endl;
+  cout << g;
   return g;
 }
 
@@ -613,7 +639,7 @@ Graph createRandomGraph(size_t numNodes, double density, Distance min, Distance 
   while (g.density() < density) {
     g.addEdge(Node(randomNode(e)), Node(randomNode(e)), randomDistance(e));
   }
-  cout << g << endl;
+  cout << g;
   return g;
 }
 
@@ -658,10 +684,10 @@ int main() {
   assert(path == WIKI_PATH and distance == 20);
 
   Graph gRandom1{createRandomGraph(50, 0.2, 1.0, 10.0)};
-  cout << setprecision(3) << calcAveragePathLength(gRandom1) << endl;
+  cout << "Average path length = " << setprecision(3) << calcAveragePathLength(gRandom1) << endl;
 
   Graph gRandom2{createRandomGraph(50, 0.4, 1.0, 10.0)};
-  cout << setprecision(3) << calcAveragePathLength(gRandom2) << endl;
+  cout << "Average path length = " << setprecision(3) << calcAveragePathLength(gRandom2) << endl;
   
   return 0;
 }
