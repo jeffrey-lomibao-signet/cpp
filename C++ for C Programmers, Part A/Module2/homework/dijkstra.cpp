@@ -25,7 +25,7 @@ vector<string> nodeDescriptors{
 
 ostream& operator<<(ostream& out, const Node& n) {
   int i = int(n);
-  if (i >= 0 or size_t(i) < nodeDescriptors.size()) {
+  if (i >= 0 and size_t(i) < nodeDescriptors.size()) {
     out << nodeDescriptors[i];
   }
   else {
@@ -79,7 +79,7 @@ private:
 };
 
 ostream& operator<<(ostream& out, const Edge& e) {
-  out << "(" << e.node << "," << e.distance << ")";
+  out << "(" << e.node << "," << setprecision(3) << e.distance << ")";
   return out;
 }
 
@@ -91,7 +91,7 @@ public:
   vector<Edge>& getEdges() { return edges; };
   void addEdge(Edge e) { edges.push_back(e); }
   void deleteEdge(Node node);
-  int getNumEdges() { return edges.size(); }
+  size_t getNumEdges() { return edges.size(); }
   bool isNodePresent(const Node node);
   Distance getEdgeValue(const Node node);
   void setEdgeValue(const Node node, Distance distance);
@@ -156,10 +156,10 @@ public:
   double density() const;
 
   // V() returns the number of vertices in the graph
-  int getNumVertices() const { return vertices.size(); }
+  size_t getNumVertices() const { return vertices.size(); }
 
   // E() returns the number of edges in the graph
-  int getNumEdges() const;
+  size_t getNumEdges() const;
 
   // adjacent (G, x, y): tests whether there is an edge from node x to node y.
   bool adjacent(Node nodeX, Node nodeY);
@@ -232,8 +232,8 @@ Graph::Graph(size_t numNodes, string name):name{name} {
   }
 }
 
-int Graph::getNumEdges() const {
-  int numEdges{0};
+size_t Graph::getNumEdges() const {
+  size_t numEdges{0};
   for(Vertex v: vertices) {
     numEdges += v.getNumEdges();
   }
@@ -255,8 +255,9 @@ vector<Node> Graph::neighbors(Node nodeX) {
 
 void Graph::addEdge(Node nodeX, Node nodeY, Distance distance) {
   if (nodeX != nodeY) {
-    if (!adjacent(nodeX, nodeY)) {
+    if (!adjacent(nodeX, nodeY))  {
       vertices.at(size_t(nodeX)).addEdge(Edge(nodeY, distance));
+      vertices.at(size_t(nodeY)).addEdge(Edge(nodeX, distance));
     }
   }
 }
@@ -415,8 +416,8 @@ private:
   Graph& g;
   PriorityQueue pq;
   void initShortestPathSearch(Node u, Node w);
-  Node start, destination;
-  size_t numNodes;
+  Node start{NO_NODE}, destination{NO_NODE};
+  size_t numNodes{0};
   vector<Distance>dist; // list of shortest distances to nodes
   void initShortestDistanceToNodesList();
   vector<Node> prev; // list of previous nodes with shortest distance to a node
@@ -432,7 +433,7 @@ ostream& operator<<(ostream& out, const vector<Distance>& v) {
   cout << "[ ";
   Node n{Node(0)};
   for (auto d: v) {
-    cout << "(" << n << ":" << d << ") ";
+    cout << "(" << n << ":" << setprecision(3) << d << ") ";
     ++n;
   }
   cout << "]";
@@ -516,11 +517,11 @@ const Path& ShortestPath::path(Node u, Node w) {
   initShortestPathSearch(u,w);
   while(!pq.isEmpty()) {
     cout << "===============" << endl;
-    Node u{pq.minPriority()};
+    Node x{pq.minPriority()};
     cout << "pq: " << pq << endl;
-    if (u == destination or u == NO_NODE)
+    if (x == destination or x == NO_NODE)
       break;
-    traverseNeighbors(u);
+    traverseNeighbors(x);
   }
   cout << "===============" << endl;
   return createShortestPathFromPrevNodesList();
@@ -529,7 +530,7 @@ const Path& ShortestPath::path(Node u, Node w) {
 Distance ShortestPath::pathSize(Node u, Node w) {
   Path& sp{shortestPath};
   if (u != start or w != destination) {
-    sp = path(start, destination);
+    sp = path(u, w);
   }
   Distance distance{0};
   size_t numNodes{sp.size()}, i{0};
@@ -601,14 +602,14 @@ Graph createWikipediaGraph() {
 //=============================================================================
 #include <random>
 #include <ctime>
-Graph createRandomGraph(double density, Distance min, Distance max) {
-  constexpr size_t NUM_RANDOM_NODES = 50;
-  Graph g(NUM_RANDOM_NODES, "Random");
+Graph createRandomGraph(size_t numNodes, double density, Distance min, Distance max) {
+  Graph g(numNodes, "Random");
 
   default_random_engine e(time(0));
   std::uniform_real_distribution<Distance> randomDistance(min, max);
-  uniform_int_distribution<int> randomNode(0,NUM_RANDOM_NODES-1);
+  uniform_int_distribution<int> randomNode(0,numNodes-1);
 
+  g.addEdge(Node::A, Node(randomNode(e)), randomDistance(e));
   while (g.density() < density) {
     g.addEdge(Node(randomNode(e)), Node(randomNode(e)), randomDistance(e));
   }
@@ -628,6 +629,20 @@ PathInfo testShortestPath(Graph& g, Node start, Node dest) {
   return {path, distance};
 }
 
+double calcAveragePathLength(Graph& g) {
+  ShortestPath sp(g);
+  Distance sum{0};
+  size_t count{0};
+  for (size_t i{1}; i < g.getNumVertices(); ++i) {
+    Distance d = sp.pathSize(Node(0), Node(i));
+    if(d != 0) {
+      sum += d;
+      ++count;
+    }
+  }
+  return sum / count;
+}
+
 int main() {
   Path path;
   Distance distance;
@@ -642,7 +657,11 @@ int main() {
   const Path WIKI_PATH = {Node::A,Node::C,Node::F,Node::E};
   assert(path == WIKI_PATH and distance == 20);
 
-  Graph gRandom{createRandomGraph(0.2, 1.0, 10.0)};
+  Graph gRandom1{createRandomGraph(50, 0.2, 1.0, 10.0)};
+  cout << setprecision(3) << calcAveragePathLength(gRandom1) << endl;
+
+  Graph gRandom2{createRandomGraph(50, 0.4, 1.0, 10.0)};
+  cout << setprecision(3) << calcAveragePathLength(gRandom2) << endl;
   
   return 0;
 }
