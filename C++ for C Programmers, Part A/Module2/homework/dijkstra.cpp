@@ -146,12 +146,25 @@ void Vertex::setEdgeValue(const Node node, Distance distance) {
 }
 
 //=============================================================================
+enum class GraphType { DIRECTED, UNDIRECTED };
+ostream& operator<<(ostream& out, const GraphType& type) {
+  switch(type) {
+  case GraphType::DIRECTED:
+    out << "Directed"; break;
+  case GraphType::UNDIRECTED:
+    out << "Undirected"; break;
+  }
+  return out;
+}
+
+//=============================================================================
 class Graph {
   friend class ShortestPath;
   friend ostream& operator<<(ostream& out, const Graph& g);
 
 public:
-  Graph(size_t numNodes, string name="");
+  Graph(size_t numNodes, GraphType type, string name="");
+  const GraphType getType() const { return type; }
   const string& getName() const { return name; }
   double density() const;
 
@@ -197,6 +210,7 @@ private:
   // Another approach could be to use (x, y) to index a cost stored in an associated array or map.
   vector<Vertex> vertices; // use adjacency list to represent the graph
   vector<Distance> nodeValues;
+  GraphType type;
   string name;
 };
 
@@ -215,18 +229,21 @@ ostream& operator<<(ostream& out, const Graph& g) {
   cout << "================================================" << endl;
   cout << g.getName() << " Graph:" << endl;
   cout << g.vertices;
-  cout << "Vertices = " << g.getNumVertices() << "; Edges = " << g.getNumEdges() << endl;
+  cout << "Type = " << g.getType() 
+    << "; Vertices = " << g.getNumVertices() 
+    << "; Edges = " << g.getNumEdges() << endl;
   cout << "Density = " << setprecision(3) << g.density() << endl;
   return out;
 }
 
 double Graph::density() const {
+  // "https://www.baeldung.com/cs/graph-density"
   size_t numVertices = getNumVertices();
-  size_t numEdges = getNumEdges();
-  return double(numEdges) / double(numVertices * (numVertices - 1)); 
+  double numEdges = getNumEdges();
+  return numEdges / double(numVertices * (numVertices - 1)); 
 }
 
-Graph::Graph(size_t numNodes, string name):name{name} {
+Graph::Graph(size_t numNodes, GraphType type, string name):type{type}, name{name} {
   for (size_t i{0}; i < numNodes; ++i) {
     vertices.push_back(Vertex());
     nodeValues.push_back(MAX_DISTANCE);
@@ -238,6 +255,9 @@ size_t Graph::getNumEdges() const {
   for(Vertex v: vertices) {
     numEdges += v.getNumEdges();
   }
+  if (type == GraphType::UNDIRECTED) {
+    numEdges /= 2;
+  }  
   return numEdges;
 }
 
@@ -258,7 +278,9 @@ void Graph::addEdge(Node nodeX, Node nodeY, Distance distance) {
   if (nodeX != nodeY) {
     if (!adjacent(nodeX, nodeY))  {
       vertices.at(size_t(nodeX)).addEdge(Edge(nodeY, distance));
-      vertices.at(size_t(nodeY)).addEdge(Edge(nodeX, distance));
+      if (type == GraphType::UNDIRECTED) {
+        vertices.at(size_t(nodeY)).addEdge(Edge(nodeX, distance));
+      }
     }
   }
 }
@@ -570,7 +592,7 @@ Distance ShortestPath::pathSize(Node u, Node w) {
 //=============================================================================
 Graph createExampleGraph() {
   constexpr int NUM_NODES = int(Node::I) + 1; 
-  Graph g(NUM_NODES, "Example");
+  Graph g(NUM_NODES, GraphType::DIRECTED, "Example");
 
   g.addEdge(Node::H, Node::A, 4);
   g.addEdge(Node::H, Node::B, 3);
@@ -605,7 +627,7 @@ Graph createExampleGraph() {
 //=============================================================================
 Graph createWikipediaGraph() {
   constexpr int NUM_NODES = int(Node::F) + 1; 
-  Graph g(NUM_NODES, "Wikipedia");
+  Graph g(NUM_NODES, GraphType::UNDIRECTED, "Wikipedia");
 
   g.addEdge(Node::A, Node::B, 7);
   g.addEdge(Node::A, Node::C, 9);
@@ -633,7 +655,7 @@ Graph createRandomGraph(size_t numNodes, double density, Distance min, Distance 
   std::uniform_real_distribution<Distance> randomDistance(min, max);
   uniform_int_distribution<int> randomNode(0,numNodes-1);
 
-  Graph g(numNodes, "Random");
+  Graph g(numNodes, GraphType::UNDIRECTED, "Random");
   g.addEdge(Node::A, Node(randomNode(e)), randomDistance(e));
   while (g.density() < density) {
     g.addEdge(Node(randomNode(e)), Node(randomNode(e)), randomDistance(e));
