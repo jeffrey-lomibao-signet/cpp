@@ -223,7 +223,7 @@ ostream& operator<<(ostream& out, const Graph& g) {
 double Graph::density() const {
   size_t numVertices = getNumVertices();
   size_t numEdges = getNumEdges();
-  return 2.0 * numEdges / (numVertices * (numVertices - 1)); 
+  return double(numEdges) / double(numVertices * (numVertices - 1)); 
 }
 
 Graph::Graph(size_t numNodes, string name):name{name} {
@@ -629,12 +629,11 @@ Graph createWikipediaGraph() {
 #include <random>
 #include <ctime>
 Graph createRandomGraph(size_t numNodes, double density, Distance min, Distance max) {
-  Graph g(numNodes, "Random");
-
   default_random_engine e(time(0));
   std::uniform_real_distribution<Distance> randomDistance(min, max);
   uniform_int_distribution<int> randomNode(0,numNodes-1);
 
+  Graph g(numNodes, "Random");
   g.addEdge(Node::A, Node(randomNode(e)), randomDistance(e));
   while (g.density() < density) {
     g.addEdge(Node(randomNode(e)), Node(randomNode(e)), randomDistance(e));
@@ -666,7 +665,7 @@ double calcAveragePathLength(Graph& g) {
       ++count;
     }
   }
-  return sum / count;
+  return double(sum) / double(count);
 }
 
 int main() {
