@@ -9,15 +9,15 @@ class PriorityQueueElement
   friend class PriorityQueue;
 
 public:
-  PriorityQueueElement(Node n, Distance d) : node{n}, d{d} {}
+  PriorityQueueElement(Node n, Distance d) : node{n}, value{d} {}
   Node getNode() { return node; }
-  Distance getDistance() { return d; }
+  Distance getValue() { return value; }
 
-  bool operator<(const PriorityQueueElement &other) const { return d < other.d; }
+  bool operator<(const PriorityQueueElement &other) const { return value < other.value; }
 
 private:
   Node node;
-  Distance d;
+  Distance value;
 };
 
 #endif

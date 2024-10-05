@@ -317,15 +317,15 @@ class PriorityQueueElement {
   friend class PriorityQueue;
 
 public: 
-  PriorityQueueElement(Node n, Distance d): node{n}, d{d} {}
+  PriorityQueueElement(Node n, Distance d): node{n}, value{d} {}
   Node getNode() { return node; }
-  Distance getDistance() { return d; }
+  Distance getValue() { return value; }
   
-  bool operator<(const PriorityQueueElement& other) const { return d < other.d; }
+  bool operator<(const PriorityQueueElement& other) const { return value < other.value; }
 
 private:
   Node node;
-  Distance d;
+  Distance value;
 };
 
 //=============================================================================
@@ -366,7 +366,7 @@ private:
 ostream& operator<<(ostream& out, const vector<PriorityQueueElement>& pq) {
   cout << pq.size() << " [ ";
   for (auto qe: pq) {
-    cout << "(" << qe.getNode() << ":" << qe.getDistance() << ") ";
+    cout << "(" << qe.getNode() << ":" << qe.getValue() << ") ";
   }
   cout << "]";
   return out;
@@ -406,7 +406,7 @@ Node PriorityQueue::minPriority() {
 void PriorityQueue::changePriority(Node n, Distance d) {
   for (auto& x: q) {
     if (x.node == n) {
-      x.d = d;
+      x.value = d;
       break;
     }
   }

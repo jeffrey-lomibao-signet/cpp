@@ -45,7 +45,7 @@ ostream &operator<<(ostream &out, const vector<PriorityQueueElement> &pq)
   cout << pq.size() << " [ ";
   for (auto qe : pq)
   {
-    cout << "(" << qe.getNode() << ":" << qe.getDistance() << ") ";
+    cout << "(" << qe.getNode() << ":" << qe.getValue() << ") ";
   }
   cout << "]";
   return out;
@@ -95,7 +95,7 @@ void PriorityQueue::changePriority(Node n, Distance d)
   {
     if (x.node == n)
     {
-      x.d = d;
+      x.value = d;
       break;
     }
   }
