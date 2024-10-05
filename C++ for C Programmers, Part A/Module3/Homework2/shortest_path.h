@@ -14,6 +14,8 @@ class ShortestPath
 
 public:
   ShortestPath(Graph &g) : g{g} {};
+  ~ShortestPath() { dist.clear(); prev.clear(); shortestPath.clear(); }
+
   // vertices(List): list of vertices in G(V,E).
   vector<EdgeList> &getVertices();
 
@@ -27,14 +29,15 @@ public:
 private:
   Graph &g;
   PriorityQueue pq;
-  void initShortestPathSearch(Node u, Node w);
   Node start{NO_NODE}, destination{NO_NODE};
   size_t numNodes{0};
   vector<Distance> dist; // list of shortest distances to nodes
-  void initShortestDistanceToNodesList();
   vector<Node> prev; // list of previous nodes with shortest distance to a node
-  void initPreviousNodesList();
   Path shortestPath;
+
+  void initShortestPathSearch(Node u, Node w);
+  void initShortestDistanceToNodesList();
+  void initPreviousNodesList();
   void updateMinDistanceAndPreviousNodesLists(Node u, Node v, Distance alt);
   void traverseNeighbors(Node u);
   Distance calcTotalDistanceToNeighbor(Node u, Node v);

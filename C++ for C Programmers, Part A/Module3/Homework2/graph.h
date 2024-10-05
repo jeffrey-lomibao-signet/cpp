@@ -14,6 +14,7 @@ class Graph
 
 public:
   Graph(size_t numNodes, GraphType type, string name = "");
+  ~Graph() { vertices.clear(); nodeValues.clear(); }
   const GraphType getType() const { return type; }
   const string &getName() const { return name; }
   double density() const;

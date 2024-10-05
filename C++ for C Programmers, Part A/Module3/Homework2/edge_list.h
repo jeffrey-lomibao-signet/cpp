@@ -5,6 +5,7 @@
 class EdgeList
 {
 public:
+  ~EdgeList() { edges.clear(); };
   vector<Edge> &getEdges() { return edges; };
   void addEdge(Edge e) { edges.push_back(e); }
   void deleteEdge(Node node);
