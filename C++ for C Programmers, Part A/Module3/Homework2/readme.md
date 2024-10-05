@@ -45,9 +45,18 @@
 - terminologies like node, edge, and density
 - difference between directed and undirected graph
 - matrix vs adjacency list representations
+
 ## C++ Concepts
 - different ways to iterate over vectors
 - deconstructing a big class into smaller classes
 - value of being able to print out custom data types
 - how to use new random functions in STL
 - how to use `friend` classes
+- `using` as a better `typedef`
+
+## Djikstra's Algorithm
+- tough to come up with own algorithm
+- understanding graph terminologies is a pre-requisite
+- following the pseudo code in Wikipedia helped a lot
+- keeping track of the minimum total distance to a node and the path to get there is key
+- having a priority queue re-inforces the importance of keeping track of the shortest path to each node, and nodes already visited
