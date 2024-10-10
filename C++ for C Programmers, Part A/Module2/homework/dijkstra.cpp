@@ -61,7 +61,7 @@ ostream& operator<<(ostream& out, const vector<Node>& nodes) {
 using Distance = double;
 constexpr Distance MAX_DISTANCE = numeric_limits<Distance>::max();
 class Edge {
-  friend class Vertex;
+  friend class EdgeList;
   friend ostream& operator<<(ostream& out, const Edge& e);
 
 public:
@@ -84,7 +84,7 @@ ostream& operator<<(ostream& out, const Edge& e) {
 }
 
 //=============================================================================
-class Vertex {
+class EdgeList {
   friend class Graph;
 
 public:
@@ -95,20 +95,20 @@ public:
   bool isNodePresent(const Node node);
   Distance getEdgeValue(const Node node);
   void setEdgeValue(const Node node, Distance distance);
-  friend ostream& operator<<(ostream& out, const Vertex& v);
+  friend ostream& operator<<(ostream& out, const EdgeList& v);
   
 private:
   vector<Edge> edges;
 };
 
-ostream& operator<<(ostream& out, const Vertex& v) {
+ostream& operator<<(ostream& out, const EdgeList& v) {
   for (auto e: v.edges) {
     cout << " " << e; 
   }
   return out;
 }
 
-bool Vertex::isNodePresent(Node node) {
+bool EdgeList::isNodePresent(Node node) {
   bool edgeFound{false};
   for (auto e: edges) {
     if (e.getNode() == node) {
@@ -119,7 +119,7 @@ bool Vertex::isNodePresent(Node node) {
   return edgeFound;
 }
 
-void Vertex::deleteEdge(Node node) {
+void EdgeList::deleteEdge(Node node) {
   for (auto e = edges.begin(); e != edges.end(); ++e) {
     if (e->getNode() == node) {
       edges.erase(e);
@@ -128,7 +128,7 @@ void Vertex::deleteEdge(Node node) {
   }
 }
 
-Distance Vertex::getEdgeValue(const Node node) {
+Distance EdgeList::getEdgeValue(const Node node) {
   for (auto e = edges.begin(); e != edges.end(); ++e) {
     if (e->getNode() == node) {
       return e->getDistance();
@@ -137,7 +137,7 @@ Distance Vertex::getEdgeValue(const Node node) {
   return 0;
 }
 
-void Vertex::setEdgeValue(const Node node, Distance distance) {
+void EdgeList::setEdgeValue(const Node node, Distance distance) {
   for (auto e = edges.begin(); e != edges.end(); ++e) {
     if (e->getNode() == node) {
       return e->setDistance(distance);
@@ -208,13 +208,13 @@ private:
   // Note in some cases such as add(G, x, y),
   // you may also want to have the edge carry along its cost. 
   // Another approach could be to use (x, y) to index a cost stored in an associated array or map.
-  vector<Vertex> vertices; // use adjacency list to represent the graph
+  vector<EdgeList> vertices; // use adjacency list to represent the graph
   vector<Distance> nodeValues;
   GraphType type;
   string name;
 };
 
-ostream& operator<<(ostream& out, const vector<Vertex>& vertices) {
+ostream& operator<<(ostream& out, const vector<EdgeList>& vertices) {
   Node node{Node(0)};
   for (auto v: vertices) {
     cout << node << ":";
@@ -245,14 +245,14 @@ double Graph::density() const {
 
 Graph::Graph(size_t numNodes, GraphType type, string name):type{type}, name{name} {
   for (size_t i{0}; i < numNodes; ++i) {
-    vertices.push_back(Vertex());
+    vertices.push_back(EdgeList());
     nodeValues.push_back(MAX_DISTANCE);
   }
 }
 
 size_t Graph::getNumEdges() const {
   size_t numEdges{0};
-  for(Vertex v: vertices) {
+  for(EdgeList v: vertices) {
     numEdges += v.getNumEdges();
   }
   if (type == GraphType::UNDIRECTED) {
@@ -267,7 +267,7 @@ bool Graph::adjacent(Node nodeX, Node nodeY) {
 
 vector<Node> Graph::neighbors(Node nodeX) {
   vector<Node> n;
-  Vertex v = vertices.at(size_t(nodeX));
+  EdgeList v = vertices.at(size_t(nodeX));
   for (auto e: v.getEdges()) {
     n.push_back(e.getNode());
   }
@@ -317,15 +317,15 @@ class PriorityQueueElement {
   friend class PriorityQueue;
 
 public: 
-  PriorityQueueElement(Node n, Distance d): node{n}, d{d} {}
+  PriorityQueueElement(Node n, Distance d): node{n}, value{d} {}
   Node getNode() { return node; }
-  Distance getDistance() { return d; }
+  Distance getValue() { return value; }
   
-  bool operator<(const PriorityQueueElement& other) const { return d < other.d; }
+  bool operator<(const PriorityQueueElement& other) const { return value < other.value; }
 
 private:
   Node node;
-  Distance d;
+  Distance value;
 };
 
 //=============================================================================
@@ -366,7 +366,7 @@ private:
 ostream& operator<<(ostream& out, const vector<PriorityQueueElement>& pq) {
   cout << pq.size() << " [ ";
   for (auto qe: pq) {
-    cout << "(" << qe.getNode() << ":" << qe.getDistance() << ") ";
+    cout << "(" << qe.getNode() << ":" << qe.getValue() << ") ";
   }
   cout << "]";
   return out;
@@ -406,7 +406,7 @@ Node PriorityQueue::minPriority() {
 void PriorityQueue::changePriority(Node n, Distance d) {
   for (auto& x: q) {
     if (x.node == n) {
-      x.d = d;
+      x.value = d;
       break;
     }
   }
@@ -434,7 +434,7 @@ class ShortestPath {
 public:
   ShortestPath(Graph& g): g{g} {};
   // vertices(List): list of vertices in G(V,E).
-  vector<Vertex>& getVertices();
+  vector<EdgeList>& getVertices();
   
   // path(u, w): find shortest path between u-w and 
   // returns the sequence of vertices representing shortest path u-v1-v2-…-vn-w.
@@ -471,7 +471,7 @@ ostream& operator<<(ostream& out, const vector<Distance>& v) {
   return out;
 }
 
-vector<Vertex>& ShortestPath::getVertices() {
+vector<EdgeList>& ShortestPath::getVertices() {
   return g.vertices;
 }
 
