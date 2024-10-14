@@ -7,11 +7,11 @@
 using namespace std;
 
 enum class Node: int { 
-  A, B, C, D, E, F, G, S, T
+  A, B, C, D, E, F, G, H, I
 };
 
-vector<string> nodeDescriptors{
-  "A","B","C","D","E","F","G","S","T"
+vector<string> nodeDescriptors {
+  "A","B","C","D","E","F","G","H","I"
 };
 
 constexpr Node NO_NODE = Node(-1);
