@@ -5,6 +5,9 @@
 #include "graph_type.h"
 
 #include <iostream>
+#include <string>
+#include <iterator>
+#include <fstream>
 using namespace std;
 
 class Graph
@@ -14,7 +17,9 @@ class Graph
 
 public:
   Graph(size_t numNodes, GraphType type, string name = "");
-  ~Graph() { vertices.clear(); nodeValues.clear(); }
+  Graph(const string &fileName, GraphType type = GraphType::UNDIRECTED);
+  ~Graph();
+
   const GraphType getType() const { return type; }
   const string &getName() const { return name; }
   double density() const;
@@ -63,6 +68,9 @@ private:
   vector<Distance> nodeValues;
   GraphType type;
   string name;
+
+  void initNodeLists(size_t numNodes);
+  void addEdges(vector<size_t> &edges);
 };
 
 ostream &operator<<(ostream &out, const vector<EdgeList> &vertices)
@@ -90,15 +98,24 @@ ostream &operator<<(ostream &out, const Graph &g)
   return out;
 }
 
-double Graph::density() const
+Graph::Graph(size_t numNodes, GraphType type, string name) : type{type}, name{name}
 {
-  // "https://www.baeldung.com/cs/graph-density"
-  size_t numVertices = getNumVertices();
-  double numEdges = getNumEdges();
-  return numEdges / double(numVertices * (numVertices - 1));
+  initNodeLists(numNodes);
 }
 
-Graph::Graph(size_t numNodes, GraphType type, string name) : type{type}, name{name}
+Graph::Graph(const string &fileName, GraphType type)
+    : type{type}, name{fileName}
+{
+  ifstream dataFile(fileName, ifstream::in);
+  istream_iterator<size_t> it(dataFile), end;
+  size_t numNodes = *it++;
+  vector<size_t> edges(it, end);
+  initNodeLists(numNodes);
+  addEdges(edges);
+  dataFile.close();
+}
+
+void Graph::initNodeLists(size_t numNodes)
 {
   for (size_t i{0}; i < numNodes; ++i)
   {
@@ -107,16 +124,30 @@ Graph::Graph(size_t numNodes, GraphType type, string name) : type{type}, name{na
   }
 }
 
+Graph::~Graph()
+{
+  vertices.clear();
+  nodeValues.clear();
+}
+
+double Graph::density() const
+{
+  // "https://www.baeldung.com/cs/graph-density"
+  size_t numVertices = getNumVertices();
+  size_t numEdges = getNumEdges();
+  if (type == GraphType::UNDIRECTED)
+  {
+    numEdges /= 2;
+  }
+  return double(numEdges) / double(numVertices * (numVertices - 1));
+}
+
 size_t Graph::getNumEdges() const
 {
   size_t numEdges{0};
   for (EdgeList v : vertices)
   {
     numEdges += v.getNumEdges();
-  }
-  if (type == GraphType::UNDIRECTED)
-  {
-    numEdges /= 2;
   }
   return numEdges;
 }
@@ -135,6 +166,21 @@ vector<Node> Graph::neighbors(Node nodeX)
     n.push_back(e.getNode());
   }
   return n;
+}
+
+void Graph::addEdges(vector<size_t> &edges)
+{
+  size_t count{0};
+  size_t edge[3];
+  for (auto n : edges)
+  {
+    edge[count] = n;
+    if (++count == 3)
+    {
+      count = 0;
+      addEdge(Node(edge[0]), Node(edge[1]), Distance(edge[2]));
+    }
+  }
 }
 
 void Graph::addEdge(Node nodeX, Node nodeY, Distance distance)
