@@ -9,22 +9,16 @@ using namespace std;
 enum class Node: int { 
   A, B, C, D, E, F, G, H, I
 };
-
-vector<string> nodeDescriptors {
-  "A","B","C","D","E","F","G","H","I"
-};
-
 constexpr Node NO_NODE = Node(-1);
 using NodeEnum = Node;
 
 ostream& operator<<(ostream& out, const Node& n) {
   int i = int(n);
-  if (i >= 0 and size_t(i) < nodeDescriptors.size()) {
-    out << nodeDescriptors[i];
-  }
-  else {
+  if(i >= 0 and i < 26)
+    out << char('A' + i);
+  else
     out << i;
-  }
+
   return out;
 }
 
