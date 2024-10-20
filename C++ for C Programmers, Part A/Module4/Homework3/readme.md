@@ -24,7 +24,7 @@ A new Graph method is added that gets the MST value of a graph.
 - contains node and value, where value is the total distance to get to the node
 
 # File Structure
-`mst.cpp` 
+`main.cpp` 
 - this is the main file that instantiates graphs and runs tests
 - supporting classes are defined in separate header files
 - header files contain implementations to be able to build the project easier
