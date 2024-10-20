@@ -78,6 +78,20 @@ private:
 
   void initNodeLists(size_t numNodes);
   void addEdges(vector<size_t> &edges);
+
+  // mst variables
+  Distance mstCost;
+  vector<Distance> C; // minimum cost container
+  vector<Node> E; // minimum edge container
+  vector<Node> F; // mst tree
+  vector<Node> Q; // mst unexplored nodes list
+  Node minNode;
+  Distance minCost;
+
+  void mstInitVariables();
+  void mstInitStartingNode();
+  void mstFindNodeWithMinimumCost();
+  void mstTraverseNeighbors(Node origin);
 };
 
 ostream &operator<<(ostream &out, const vector<EdgeList> &vertices)
@@ -243,74 +257,68 @@ void Graph::setEdgeValue(Node nodeX, Node nodeY, Distance distance)
 mst_pair Graph::getMst()
 {
   // Reference: http://en.wikipedia.org/wiki/Prim_algorithm
-  // Prim's algorithm
-  // The algorithm may informally be described as performing the following steps:
-  // Initialize a tree with a single vertex, chosen arbitrarily from the graph.
-  // Grow the tree by one edge: Of the edges that connect the tree to vertices not yet in the tree, find the minimum-weight edge, and transfer it to the tree.
-  // Repeat step 2 (until all vertices are in the tree).
-
-  // In more detail, it may be implemented following the pseudocode below.
-  // Associate with each vertex v of the graph a number C[v] (the cheapest cost of a connection to v) and an edge E[v] (the edge providing that cheapest connection). To initialize these values, set all values of C[v] to +∞ (or to any number larger than the maximum edge weight) and set each E[v] to a special flag value indicating that there is no edge connecting v to earlier vertices.
-  size_t numNodes = vertices.size();
-  vector<Distance> C(numNodes,MAX_DISTANCE);
-  vector<Node> E(numNodes,NO_NODE);
-  // Initialize an empty forest F and a set Q of vertices that have not yet been included in F (initially, all vertices).
-  vector<Node> F;
-  vector<Node> Q;
-  for (size_t n = 0; n < numNodes; ++n)
+  mstInitVariables();
+  while (!Q.empty())
   {
-    if (neighbors(Node(n)).size() > 0)
-      Q.push_back(Node(n));
+    mstFindNodeWithMinimumCost();
+    Q.erase(remove(Q.begin(), Q.end(), minNode), Q.end());
+    mstCost += minCost;
+    F.push_back(minNode);
+    mstTraverseNeighbors(minNode);
   }
-  Distance mstCost{0};
+  return mst_pair(mstCost, F);
+}
+
+void Graph::mstInitVariables()
+{
+  size_t numNodes = vertices.size();
+  for (size_t i{0}; i < numNodes; ++i)
+  {
+    C.push_back(MAX_DISTANCE);
+    E.push_back(NO_NODE);
+    if (neighbors(Node(i)).size() > 0)
+      Q.push_back(Node(i));
+  }
+  mstCost = 0;
+  mstInitStartingNode();
+}
+
+void Graph::mstInitStartingNode()
+{
   Node start = Node(0);
   C.at(size_t(start)) = 0;
   E.at(size_t(start)) = start;
-  // Repeat the following steps until Q is empty:
-  while (!Q.empty())
-  {
-    // Find and remove a vertex v from Q having the minimum possible value of C[v]
-    Distance min = MAX_DISTANCE;
-    Node v{NO_NODE};
-    for (auto n: Q)
-    {
-      Distance d = C.at(size_t(n));
-      if (d < min)
-      {
-        min = d;
-        v = Node(n);
-      }
-    }
-    mstCost += min;
-    for (auto it = Q.begin(); it != Q.end(); ++it)
-    {
-      if (*it == v)
-      {
-        Q.erase(it);
-        break;
-      }
-    }
+}
 
-    // Add v to F
-    F.push_back(v);
-    // Loop over the edges vw connecting v to other vertices w. For each such edge, if w still belongs to Q and vw has smaller weight than C[w], perform the following steps:
-    for (auto w: neighbors(v))
-    {      
-      if (find(Q.begin(), Q.end(), w) != Q.end())
+void Graph::mstFindNodeWithMinimumCost()
+{
+  minCost = MAX_DISTANCE;
+  minNode = NO_NODE;
+  for (auto n: Q)
+  {
+    Distance d = C.at(size_t(n));
+    if (d < minCost)
+    {
+      minCost = d;
+      minNode = Node(n);
+    }
+  }
+}
+
+void Graph::mstTraverseNeighbors(Node origin)
+{
+  for (auto destination: neighbors(origin))
+  {      
+    if (find(Q.begin(), Q.end(), destination) != Q.end())
+    {
+      Distance d = getEdgeValue(origin, destination);
+      if (d < C.at(size_t(destination)))
       {
-        Distance d = getEdgeValue(v, w);
-        if (d < C.at(size_t(w)))
-        {
-          // Set C[w] to the cost of edge vw
-          C.at(size_t(w)) = d;
-          // Set E[w] to point to edge vw.
-          E.at(size_t(w)) = v;
-        }
+        C.at(size_t(destination)) = d;
+        E.at(size_t(destination)) = origin;
       }
     }
   }
-  // Return F, which specifically includes the corresponding edges in E}
-  return mst_pair(mstCost, F);
 }
 
 #endif
