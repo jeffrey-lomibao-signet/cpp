@@ -9,7 +9,10 @@
 #include <iterator>
 #include <fstream>
 #include <algorithm>
+#include <utility>
+
 using namespace std;
+using mst_pair = pair<const Distance, const vector<Node>>;
 
 class Graph
 {
@@ -55,8 +58,8 @@ public:
   // set_edge_value (G, x, y, v): sets the value associated to the edge (x,y) to v.
   void setEdgeValue(Node nodeX, Node nodeY, Distance distance);
 
-  // calculate mst value
-  Distance getMst();
+  // calculate and return mst cost and tree
+  mst_pair getMst();
 
 private:
   // One important consideration for the Graph class is how to represent the graph as a member ADT.
@@ -237,7 +240,7 @@ void Graph::setEdgeValue(Node nodeX, Node nodeY, Distance distance)
   }
 }
 
-Distance Graph::getMst()
+mst_pair Graph::getMst()
 {
   // Reference: http://en.wikipedia.org/wiki/Prim_algorithm
   // Prim's algorithm
@@ -259,7 +262,7 @@ Distance Graph::getMst()
     if (neighbors(Node(n)).size() > 0)
       Q.push_back(Node(n));
   }
-  Distance mst{0};
+  Distance mstCost{0};
   Node start = Node(0);
   C.at(size_t(start)) = 0;
   E.at(size_t(start)) = start;
@@ -278,7 +281,7 @@ Distance Graph::getMst()
         v = Node(n);
       }
     }
-    mst += min;
+    mstCost += min;
     for (auto it = Q.begin(); it != Q.end(); ++it)
     {
       if (*it == v)
@@ -306,9 +309,8 @@ Distance Graph::getMst()
       }
     }
   }
-  cout << F << " = ";
   // Return F, which specifically includes the corresponding edges in E}
-  return mst;
+  return mst_pair(mstCost, F);
 }
 
 #endif

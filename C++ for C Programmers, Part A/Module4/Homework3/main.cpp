@@ -6,7 +6,8 @@ void mstTest(string graphFileName)
 {
   Graph graph(graphFileName);
   cout << graph << endl;
-  cout << "MST = " << graph.getMst() << endl;
+  mst_pair p = graph.getMst();
+  cout << "MST cost = " << p.first << ", tree = " << p.second << endl;
 }
 
 int main()
