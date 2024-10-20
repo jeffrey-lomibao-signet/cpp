@@ -2,23 +2,19 @@
 #include <iostream>
 using namespace std;
 
+void mstTest(string graphFileName)
+{
+  Graph graph(graphFileName);
+  cout << graph << endl;
+  cout << "MST = " << graph.getMst() << endl;
+}
+
 int main()
 {
-  Graph gMstExample("mst_example.txt");
-  cout << gMstExample << endl;
-  cout << "MST = " << gMstExample.getMst() << endl;
-
-  Graph gMstPrim("mst_prim_example.txt");
-  cout << gMstPrim << endl;
-  cout << "MST = " << gMstPrim.getMst() << endl;
-
-  Graph gMstKruskal("mst_kruskal_example.txt");
-  cout << gMstKruskal << endl;
-  cout << "MST = " << gMstKruskal.getMst() << endl;
-
-  Graph gMst("mst_data.txt");
-  cout << gMst << endl;
-  cout << "MST = " << gMst.getMst() << endl;
+  mstTest("mst_example.txt");
+  mstTest("mst_prim_example.txt");
+  mstTest("mst_kruskal_example.txt");
+  mstTest("mst_data.txt");
 
   return 0;
 }
