@@ -82,7 +82,6 @@ private:
   // mst variables
   Distance mstCost;
   vector<Distance> C; // minimum cost container
-  vector<Node> E; // minimum edge container
   vector<Node> F; // mst tree
   vector<Node> Q; // mst unexplored nodes list
   Node minNode;
@@ -275,7 +274,6 @@ void Graph::mstInitVariables()
   for (size_t i{0}; i < numNodes; ++i)
   {
     C.push_back(MAX_DISTANCE);
-    E.push_back(NO_NODE);
     if (neighbors(Node(i)).size() > 0)
       Q.push_back(Node(i));
   }
@@ -287,7 +285,6 @@ void Graph::mstInitStartingNode()
 {
   Node start = Node(0);
   C.at(size_t(start)) = 0;
-  E.at(size_t(start)) = start;
 }
 
 void Graph::mstFindNodeWithMinimumCost()
@@ -315,7 +312,6 @@ void Graph::mstTraverseNeighbors(Node origin)
       if (d < C.at(size_t(destination)))
       {
         C.at(size_t(destination)) = d;
-        E.at(size_t(destination)) = origin;
       }
     }
   }
