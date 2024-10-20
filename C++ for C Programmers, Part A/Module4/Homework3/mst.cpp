@@ -4,10 +4,6 @@ using namespace std;
 
 int main()
 {
-  Graph gMst("mst_data.txt");
-  cout << gMst << endl;
-  cout << "MST = " << gMst.getMst() << endl;
-
   Graph gMstExample("mst_example.txt");
   cout << gMstExample << endl;
   cout << "MST = " << gMstExample.getMst() << endl;
@@ -19,6 +15,10 @@ int main()
   Graph gMstKruskal("mst_kruskal_example.txt");
   cout << gMstKruskal << endl;
   cout << "MST = " << gMstKruskal.getMst() << endl;
+
+  Graph gMst("mst_data.txt");
+  cout << gMst << endl;
+  cout << "MST = " << gMst.getMst() << endl;
 
   return 0;
 }
