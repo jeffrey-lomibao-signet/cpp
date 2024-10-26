@@ -2,7 +2,7 @@
 //C++ For C Programmers Part B
 //April 2016
 #include <iostream>
-#include <algorithm>
+#include <numeric>
 using namespace std;
 
 int main()
